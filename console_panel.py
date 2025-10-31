@@ -1,9 +1,7 @@
-# console_panel.py
 import os
 import django
 import datetime
 
-# Setup Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')  # Replace with your settings module
 django.setup()
 
@@ -13,7 +11,7 @@ def main():
     uow = UnitOfWork()
 
     while True:
-        print("\n📚 Console Admin Panel")
+        print("\nAdmin Panel")
         print("1. Create Author")
         print("2. List Authors")
         print("3. Create Publisher")
@@ -37,7 +35,7 @@ def main():
                 'nationality': nationality
             }
             author = uow.authors.create(data)
-            print(f"✅ Created Author: {author.firstname} {author.lastname} (ID: {author.authorid})")
+            print(f"Created Author: {author.firstname} {author.lastname} (ID: {author.authorid})")
 
         elif choice == '2':
             authors = uow.authors.get_all()
@@ -50,12 +48,12 @@ def main():
             country = input("Country: ")
             data = {'name': name, 'city': city, 'country': country}
             pub = uow.publishers.create(data)
-            print(f"✅ Created Publisher: {pub.name} (ID: {pub.publisherid})")
+            print(f"Created Publisher: {pub.name} (ID: {pub.publisherid})")
 
         elif choice == '4':
             pubs = uow.publishers.get_all()
             for p in pubs:
-                print(f"🏢 {p.publisherid}: {p.name} ({p.city}, {p.country})")
+                print(f"{p.publisherid}: {p.name} ({p.city}, {p.country})")
 
         elif choice == '5':
             title = input("Book title: ")
@@ -78,29 +76,29 @@ def main():
                     'publisherid': publisher
                 }
                 book = uow.books.create(data)
-                print(f"✅ Created Book: {book.title} (ID: {book.bookid})")
+                print(f" Created Book: {book.title} (ID: {book.bookid})")
             else:
-                print("❌ Invalid author or publisher ID.")
+                print("Invalid author or publisher ID.")
 
         elif choice == '6':
             books = uow.books.get_all()
             for b in books:
-                print(f"📖 {b.bookid}: {b.title} ({b.publicationyear}) — {b.authorid.firstname} / {b.publisherid.name}")
+                print(f"{b.bookid}: {b.title} ({b.publicationyear}) — {b.authorid.firstname} / {b.publisherid.name}")
 
         elif choice == '7':
             author_id = int(input("Введіть ID автора для видалення: "))
             success = uow.authors.delete_by_id(author_id)
             if success:
-                print("✅ Автор успішно видалений.")
+                print("Автор успішно видалений.")
             else:
-                print("❌ Автор з таким ID не знайдений.")
+                print("Автор з таким ID не знайдений.")
 
         elif choice == '0':
-            print("👋 Exiting.")
+            print("Exiting.")
             break
 
         else:
-            print("❌ Invalid choice. Try again.")
+            print("Invalid choice. Try again.")
 
 if __name__ == "__main__":
     main()
