@@ -1,7 +1,6 @@
 import os
 import django
 import datetime
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')  # Replace with your settings module
 django.setup()
 
