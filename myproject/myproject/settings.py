@@ -105,6 +105,20 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        # Це додасть Basic Auth (логін/пароль) для ВСІХ запитів
+        'rest_framework.authentication.BasicAuthentication',
+
+        # Також корисно додати SessionAuthentication, щоб ви могли
+        # користуватись API прямо з адмінки Django
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        # Це вимагатиме, щоб користувач був залогінений
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -127,3 +141,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+"""
+Username: su
+Email address: su@example.com
+Password: 1234
+"""
