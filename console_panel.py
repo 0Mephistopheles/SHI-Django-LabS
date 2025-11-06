@@ -17,7 +17,7 @@ def main():
         print("4. List Publishers")
         print("5. Create Book")
         print("6. List Books")
-        print("7. List Books")
+        print("7. Delete by Id")
         print("0. Exit")
 
         choice = input("Select an option: ")
