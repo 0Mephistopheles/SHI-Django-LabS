@@ -16,3 +16,7 @@ class BaseRepository(abc.ABC):
     @abc.abstractmethod
     def delete_by_id(self, id):
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def update(self, id, data):
+        raise NotImplementedError

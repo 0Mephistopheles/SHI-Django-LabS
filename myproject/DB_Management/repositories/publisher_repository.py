@@ -23,3 +23,16 @@ class PublisherRepository(BaseRepository):
             return True
         except self.model.DoesNotExist:
             return False
+
+    def update(self, pk, data):
+        try:
+            obj = self.model.objects.get(pk=pk)
+        except self.model.DoesNotExist:
+            return None
+
+        for key, value in data.items():
+            setattr(obj, key, value)
+
+        obj.save()
+
+        return obj
