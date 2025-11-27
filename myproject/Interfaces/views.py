@@ -4,18 +4,15 @@ from DB_Management.repositories.unit_of_work import UnitOfWork
 from .forms import BookForm
 
 
-# 1. Список книг (List View)
+
 def book_list(request):
     uow = UnitOfWork()
-    # Використовуємо репозиторій для отримання всіх записів
     books = uow.books.get_all()
     return render(request, 'Interfaces/book_list.html', {'books': books})
 
 
-# 2. Деталі книги (Detail View)
 def book_detail(request, pk):
     uow = UnitOfWork()
-    # Отримуємо об'єкт по ID через репозиторій
     book = uow.books.get_by_id(pk)
 
     if not book:
@@ -24,13 +21,11 @@ def book_detail(request, pk):
     return render(request, 'Interfaces/book_detail.html', {'book': book})
 
 
-# 3. Створення та Редагування (Create/Update View)
 def book_form(request, pk=None):
     uow = UnitOfWork()
     book = None
     title = "Додавання нової книги"
 
-    # Якщо передано pk, намагаємось знайти книгу для редагування
     if pk:
         book = uow.books.get_by_id(pk)
         if not book:
@@ -38,16 +33,13 @@ def book_form(request, pk=None):
         title = "Редагування книги"
 
     if request.method == 'POST':
-        # Передаємо instance=book, щоб форма знала, що ми (можливо) редагуємо цей об'єкт
         form = BookForm(request.POST, instance=book)
 
         if form.is_valid():
-            # ! ВАЖЛИВО: Ми не використовуємо form.save(), бо це обхід UOW.
-            # Ми беремо чисті дані з форми і передаємо їх у репозиторій.
+
             data = form.cleaned_data
 
             if pk:
-                # Викликаємо метод update з репозиторія
                 uow.books.update(pk, data)
             else:
                 # Викликаємо метод create з репозиторія
