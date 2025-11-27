@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     'DB_Management',
     'Api',
+    "Interfaces",
 
     'rest_framework',
 ]

@@ -25,6 +25,8 @@ class Author(models.Model):
         db_table = 'author'
         unique_together = (('firstname', 'lastname'),)
 
+    def __str__(self):
+        return f"{self.firstname} {self.lastname}"
 
 class Book(models.Model):
     bookid = models.AutoField(db_column='BookID', primary_key=True)  # Field name made lowercase.
@@ -40,6 +42,8 @@ class Book(models.Model):
         managed = False
         db_table = 'book'
 
+    def __str__(self):
+        return self.title
 
 class Bookedition(models.Model):
     editionid = models.AutoField(db_column='EditionID', primary_key=True)  # Field name made lowercase.
@@ -131,6 +135,8 @@ class Publisher(models.Model):
         managed = False
         db_table = 'publisher'
 
+    def __str__(self):
+        return self.name
 
 class Warehouse(models.Model):
     warehouseid = models.AutoField(db_column='WarehouseID', primary_key=True)  # Field name made lowercase.
