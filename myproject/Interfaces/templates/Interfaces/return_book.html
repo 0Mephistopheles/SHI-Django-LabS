@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Віддати книгу</title>
+</head>
+<body>
+    <h1>Віддати книгу до бібліотеки</h1>
+    <p>Заповніть дані про книгу. Після успішного додавання ви отримаєте 200 грн.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Віддати книгу</button>
+    </form>
+
+    <a href="{% url 'user_dashboard' %}">Скасувати</a>
+</body>
+</html>

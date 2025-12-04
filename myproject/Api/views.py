@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework import status, viewsets
 from DB_Management.repositories.unit_of_work import UnitOfWork
-from .serializers import AuthorSerializer, BookSerializer, PublisherSerializer
+from .serializers import AuthorSerializer, BookSerializer, PublisherSerializer, BookOrderSerializer
 
 
 class AuthorViewSet(viewsets.ViewSet):
@@ -179,3 +179,20 @@ class PublisherViewSet(viewsets.ViewSet):
             uow.publishers.update(pk, serializer.validated_data)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class BookOrderViewSet(viewsets.ViewSet):
+    def list(self, request):
+        uow = UnitOfWork()
+        orders = uow.orders.get_all()
+        serializer = BookOrderSerializer(orders, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        uow = UnitOfWork()
+        order = uow.orders.get_by_id(pk)
+        if not order:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = BookOrderSerializer(order)
+        return Response(serializer.data)
+
+

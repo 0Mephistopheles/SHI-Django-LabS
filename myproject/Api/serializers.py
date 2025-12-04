@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from DB_Management.models import Author, Book, Publisher
+from DB_Management.models import Author, Book, Publisher, Bookorder
 
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -23,4 +23,10 @@ class BookSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = Book
+        fields = '__all__'
+
+
+class BookOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bookorder
         fields = '__all__'

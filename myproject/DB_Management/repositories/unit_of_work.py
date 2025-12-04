@@ -3,7 +3,8 @@ from django.db import transaction
 from .author_repository import AuthorRepository
 from .books_repository import BookRepository
 from .publisher_repository import PublisherRepository
-from ..models import Author, Book, Publisher
+from .order_repository import OrderRepository
+from ..models import Author, Book, Publisher, Bookorder
 
 
 class UnitOfWork:
@@ -11,6 +12,7 @@ class UnitOfWork:
         self.authors = AuthorRepository(Author)
         self.books = BookRepository(Book)
         self.publishers = PublisherRepository(Publisher)
+        self.orders = OrderRepository(Bookorder)
         self._transaction = None
 
     def __enter__(self):

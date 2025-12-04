@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Мої замовлення</title>
+</head>
+<body>
+    <h1>Мої замовлення</h1>
+    <a href="{% url 'user_dashboard' %}">⬅ Назад в кабінет</a>
+    <hr>
+
+    {% if orders %}
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr>
+                    <th>№ Замовлення</th>
+                    <th>Дата</th>
+                    <th>Сума</th>
+                    <th>Статус</th>
+                    <th>Книги</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.orderid }}</td>
+                    <td>{{ order.orderdate }}</td>
+                    <td>{{ order.totalamount }} грн</td>
+                    <td>{{ order.paymentstatus }}</td>
+                    <td>
+                        {% for item in order.bookorderitem_set.all %}
+                            {{ item.bookid.title }} ({{ item.quantity }} шт.)<br>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Ви ще нічого не замовили.</p>
+    {% endif %}
+</body>
+</html>

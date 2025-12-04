@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Загальна сторінка</title>
+</head>
+<body>
+    <h1>Загальна сторінка користувача: {{ user.username }}</h1>
+
+    <h3>Ваш баланс: {{ balance }} грн.</h3>
+
+    <ul>
+        <li>
+            <a href="{% url 'add_balance' %}">Поповнити баланс (+100 грн)</a>
+        </li>
+    </ul>
+
+    <hr>
+
+    <ul>
+        <li>
+            <a href="{% url 'book_list' %}">Купити книгу (Список всіх книг)</a>
+        </li>
+        <li>
+            <a href="{% url 'my_orders' %}">Переглянути свої замовлення (Історія)</a>
+        </li>
+        <li>
+            <a href="{% url 'return_book_view' %}">Віддати свою книгу (+200 грн до балансу)</a>
+        </li>
+    </ul>
+    <hr>
+
+    <hr>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Вийти з акаунту</button>
+    </form>
+</body>
+</html>

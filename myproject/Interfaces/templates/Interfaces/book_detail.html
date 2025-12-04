@@ -11,16 +11,23 @@
     <p><strong>Автор:</strong> {{ book.authorid.firstname }} {{ book.authorid.lastname }}</p>
     <p><strong>Видавець:</strong> {{ book.publisherid.name }}</p>
 
+    {% if is_admin %}
+        <hr>
+        <p><em>Панель адміністратора:</em></p>
+        <a href="{% url 'book_update' book.bookid %}">✏ Редагувати</a>
+        <br><br>
+
+        <form action="{% url 'book_delete' book.bookid %}" method="post">
+            {% csrf_token %}
+            <button type="submit" onclick="return confirm('Ви впевнені?')">🗑 Видалити цю книгу</button>
+        </form>
+    {% endif %}
+
     <hr>
-    <a href="{% url 'book_update' book.bookid %}">✏ Редагувати</a>
-    <br><br>
-
-    <form action="{% url 'book_delete' book.bookid %}" method="post">
-        {% csrf_token %}
-        <button type="submit" onclick="return confirm('Ви впевнені?')">🗑 Видалити цю книгу</button>
-    </form>
-
-    <br>
-    <a href="{% url 'book_list' %}">⬅ Назад до списку</a>
+    {% if is_admin %}
+        <a href="{% url 'book_list' %}">⬅ Назад до списку (Адмін)</a>
+    {% else %}
+        <a href="{% url 'book_list' %}">⬅ Назад до списку (Купити книгу)</a>
+    {% endif %}
 </body>
 </html>
