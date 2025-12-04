@@ -1,16 +1,101 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import Http404
+from django.http import Http404, HttpResponseForbidden
+from django.contrib.auth.decorators import login_required
 from DB_Management.repositories.unit_of_work import UnitOfWork
 from .forms import BookForm
+from DB_Management.models import UserProfile, Customer, Bookorder, Bookorderitem
+from django.utils import timezone
+
+# 1. Dispatcher (Розподілювач)
+@login_required
+def index_dispatch(request):
+    """
+    Перевіряє права користувача і перенаправляє на відповідну сторінку.
+    """
+    if request.user.is_superuser:
+        return redirect('admin_dashboard')
+    else:
+        return redirect('user_dashboard')
+
+
+# --- ЛОГІКА АДМІНА (Image 2) ---
+
+@login_required
+def admin_dashboard(request):
+    if not request.user.is_superuser:
+        return redirect('user_dashboard')  # Захист від звичайних юзерів
+
+    return render(request, 'Interfaces/admin_dashboard.html')
+
+
+@login_required
+def admin_stats(request):
+    if not request.user.is_superuser:
+        return redirect('index')
+
+    return render(request, 'Interfaces/admin_stats.html')
+
+
+
+@login_required
+def user_dashboard(request):
+    # Отримуємо профіль для відображення балансу
+    try:
+        profile = request.user.userprofile
+    except UserProfile.DoesNotExist:
+        # Fallback якщо профіль не створився автоматично
+        profile = UserProfile.objects.create(user=request.user)
+
+    return render(request, 'Interfaces/user_dashboard.html', {'balance': profile.balance})
+
+
+@login_required
+def add_balance(request):
+    """
+    Гіперпосилання 'додати 100 грн'
+    """
+    profile = request.user.userprofile
+    profile.balance += 100
+    profile.save()
+    return redirect('user_dashboard')
+
+
+@login_required
+def return_book_view(request):
+    """
+    Віддати свою книгу: додаємо книгу в базу + нараховуємо 200 грн.
+    """
+    uow = UnitOfWork()  #
+
+    if request.method == 'POST':
+        form = BookForm(request.POST)  #
+        if form.is_valid():
+            data = form.cleaned_data
+
+            # 1. Додаємо книгу через репозиторій
+            uow.books.create(data)
+
+            # 2. Нараховуємо баланс користувачу
+            profile = request.user.userprofile
+            profile.balance += 200
+            profile.save()
+
+            return redirect('user_dashboard')
+    else:
+        form = BookForm()
+
+    return render(request, 'Interfaces/return_book.html', {'form': form})
+
 
 
 
 def book_list(request):
     uow = UnitOfWork()
-    books = uow.books.get_all()
-    return render(request, 'Interfaces/book_list.html', {'books': books})
+    books = uow.books.get_all()  #
+    return render(request, 'Interfaces/book_list.html', {'books': books, 'is_admin': request.user.is_superuser})
 
 
+@login_required
 def book_detail(request, pk):
     uow = UnitOfWork()
     book = uow.books.get_by_id(pk)
@@ -18,10 +103,16 @@ def book_detail(request, pk):
     if not book:
         raise Http404("Книгу не знайдено")
 
-    return render(request, 'Interfaces/book_detail.html', {'book': book})
+    return render(request, 'Interfaces/book_detail.html', {
+        'book': book,
+        'is_admin': request.user.is_superuser
+    })
 
-
+@login_required
 def book_form(request, pk=None):
+    if pk and not request.user.is_superuser:
+        return HttpResponseForbidden("Тільки адміністратор може редагувати книги.")
+
     uow = UnitOfWork()
     book = None
     title = "Додавання нової книги"
@@ -34,39 +125,93 @@ def book_form(request, pk=None):
 
     if request.method == 'POST':
         form = BookForm(request.POST, instance=book)
-
         if form.is_valid():
-
             data = form.cleaned_data
-
             if pk:
                 uow.books.update(pk, data)
             else:
-                # Викликаємо метод create з репозиторія
                 uow.books.create(data)
 
-            return redirect('book_list')
+            if request.user.is_superuser:
+                return redirect('book_list')
+            else:
+                return redirect('user_dashboard')
     else:
-        # GET запит: просто відображаємо форму (пусту або заповнену даними книги)
         form = BookForm(instance=book)
 
     return render(request, 'Interfaces/book_form.html', {'form': form, 'title': title})
 
 
-# 4. Видалення (Delete View)
+@login_required
 def book_delete(request, pk):
-    uow = UnitOfWork()
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("Тільки адміністратор може видаляти книги.")
 
-    # Спочатку шукаємо книгу, щоб переконатись, що вона існує,
-    # і щоб показати її назву на сторінці підтвердження.
+    uow = UnitOfWork()
     book = uow.books.get_by_id(pk)
     if not book:
         raise Http404("Книгу не знайдено")
 
     if request.method == 'POST':
-        # Виконуємо видалення через репозиторій
         uow.books.delete_by_id(pk)
         return redirect('book_list')
 
-    # Якщо GET - показуємо сторінку підтвердження
     return render(request, 'Interfaces/book_confirm_delete.html', {'book': book})
+
+
+@login_required
+def buy_book(request, pk):
+    uow = UnitOfWork()
+    book = uow.books.get_by_id(pk)
+    if not book:
+        raise Http404("Книгу не знайдено")
+
+    price = 150.00
+
+    profile = request.user.userprofile
+
+    if profile.balance < price:
+        return render(request, 'Interfaces/order_error.html', {'message': 'Недостатньо коштів на балансі!'})
+
+    customer = Customer.objects.filter(email=request.user.email).first()
+    if not customer:
+        customer = Customer.objects.create(
+            firstname=request.user.first_name or request.user.username,
+            lastname=request.user.last_name or "User",
+            email=request.user.email or f"{request.user.username}@example.com",
+            phonenumber="",
+            address=""
+        )
+
+
+    with uow:
+        order_data = {
+            'customerid': customer,
+            'orderdate': timezone.now(),
+            'totalamount': price,
+            'paymentstatus': 'Paid'
+        }
+        order = uow.orders.create(order_data)
+
+        Bookorderitem.objects.create(
+            orderid=order,
+            bookid=book,
+            quantity=1,
+            unitprice=price
+        )
+
+        profile.balance = float(profile.balance) - price
+        profile.save()
+
+    return redirect('my_orders')
+
+
+@login_required
+def my_orders(request):
+    uow = UnitOfWork()
+    email = request.user.email or f"{request.user.username}@example.com"
+    orders = uow.orders.get_by_email(email)
+
+
+    return render(request, 'Interfaces/my_orders.html', {'orders': orders})
+

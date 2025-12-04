@@ -5,7 +5,14 @@
 </head>
 <body>
     <h1>Бібліотека: Список книг</h1>
-    <a href="{% url 'book_create' %}"> Додати нову книгу</a>
+
+    {% if is_admin %}
+        <p>[Режим Адміністратора]</p>
+        <a href="{% url 'book_create' %}">Додати нову книгу</a>
+    {% else %}
+        <p>[Режим Користувача] - Оберіть книгу для детального перегляду</p>
+    {% endif %}
+
     <hr>
     <ul>
         {% for book in books %}
@@ -14,10 +21,16 @@
                     <strong>{{ book.title }}</strong>
                 </a>
                 ({{ book.publicationyear }}) — {{ book.authorid.firstname }} {{ book.authorid.lastname }}
+                {% if not is_admin %}
+                    | <a href="{% url 'buy_book' book.bookid %}" onclick="return confirm('Купити за 150 грн?')"> Купити</a>
+                {% endif %}
             </li>
         {% empty %}
             <li>Книг поки немає.</li>
         {% endfor %}
     </ul>
+
+    <br>
+    <a href="{% url 'index' %}">⬅ Назад в меню</a>
 </body>
 </html>

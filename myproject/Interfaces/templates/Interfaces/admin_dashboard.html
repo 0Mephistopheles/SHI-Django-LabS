@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Сторінка Адміна</title>
+</head>
+<body>
+    <h1>Сторінка Адміна</h1>
+    <hr>
+    <ul>
+        <li>
+            <a href="{% url 'admin_stats' %}">Переглянути статистику</a>
+        </li>
+        <li>
+            <a href="{% url 'book_list' %}">Переглянути всі книги (Редагувати/Видалити)</a>
+        </li>
+        <li>
+            <a href="{% url 'book_create' %}">Додати книгу</a>
+        </li>
+    </ul>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Вийти (Logout)</button>
+    </form>
+</body>
+</html>
