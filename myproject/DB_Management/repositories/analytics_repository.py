@@ -5,11 +5,26 @@ from ..models import Author, Book, Bookorder, Publisher, Warehouse, Bookorderite
 
 class AnalyticsRepository(BaseRepository):
 
+    def get_by_id(self, id):
+        raise NotImplementedError("Метод не підтримується в аналітиці")
+
+    def get_all(self):
+        raise NotImplementedError("Використовуйте специфічні методи аналітики")
+
+    def create(self, data):
+        raise NotImplementedError("Аналітика тільки для читання")
+
+    def delete_by_id(self, id):
+        raise NotImplementedError("Аналітика тільки для читання")
+
+    def update(self, id, data):
+        raise NotImplementedError("Аналітика тільки для читання")
+
     def get_books_count_by_author(self):
         """1. Кількість книг кожного автора (Group By + Count)"""
         return Author.objects.annotate(
             books_count=Count('book')
-        ).values('firstname', 'lastname', 'books_count').order_by('-books_count')
+        ).filter(books_count__gt=0).values('firstname', 'lastname', 'books_count').order_by('-books_count')
 
     def get_total_spent_by_customer(self):
         """2. Загальна сума замовлень кожного клієнта (Group By + Sum)"""
