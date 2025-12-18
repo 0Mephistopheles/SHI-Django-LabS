@@ -1,7 +1,6 @@
 from .base_repository import BaseRepository
-from django.db.models import Count
-from ..models import Author
-class AuthorRepository(BaseRepository):
+
+class WarehouseStockRepository(BaseRepository):
     def __init__(self, model):
         self.model = model
 
@@ -15,6 +14,7 @@ class AuthorRepository(BaseRepository):
         return self.model.objects.all()
 
     def create(self, data):
+        # Внесення даних про кількість книг на різних складах
         return self.model.objects.create(**data)
 
     def delete_by_id(self, id):
@@ -28,12 +28,9 @@ class AuthorRepository(BaseRepository):
     def update(self, pk, data):
         try:
             obj = self.model.objects.get(pk=pk)
+            for key, value in data.items():
+                setattr(obj, key, value)
+            obj.save()
+            return obj
         except self.model.DoesNotExist:
             return None
-
-        for key, value in data.items():
-            setattr(obj, key, value)
-
-        obj.save()
-
-        return obj
