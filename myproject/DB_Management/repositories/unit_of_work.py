@@ -18,7 +18,6 @@ class UnitOfWork:
         self.books = BookRepository(Book)
         self.publishers = PublisherRepository(Publisher)
         self.orders = OrderRepository(Bookorder)
-
         self.order_items = BookOrderItemRepository(Bookorderitem)
         self.warehouses = WarehouseRepository(Warehouse)
         self.stocks = WarehouseStockRepository(Warehousestock)
