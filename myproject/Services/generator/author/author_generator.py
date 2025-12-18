@@ -1,10 +1,11 @@
 import random
 from datetime import date
+import calendar
 from Services.generator.author.author_data import (
     FIRST_NAMES,
     LAST_NAMES,
     NATIONALITIES,
-    CAPACITY_RANGE,
+    BIRTH_YEAR_RANGE,  # Add this
 )
 
 class AuthorGenerator:
@@ -13,7 +14,9 @@ class AuthorGenerator:
     def _random_birthdate() -> date:
         year = random.randint(*BIRTH_YEAR_RANGE)
         month = random.randint(1, 12)
-        day = random.randint(1, 28)  # to avoid invalid dates
+        # Use calendar.monthrange to find the last valid day of the specific month/year
+        last_day = calendar.monthrange(year, month)[1]
+        day = random.randint(1, last_day)
         return date(year, month, day)
 
     @staticmethod
