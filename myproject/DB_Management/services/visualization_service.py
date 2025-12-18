@@ -6,6 +6,7 @@ import seaborn as sns
 import io
 import base64
 import pandas as pd
+from DB_Management.repositories.analytics_repository import AnalyticsRepository
 
 class SeabornVisualizationService:
     def __init__(self):
