@@ -1,10 +1,15 @@
 from django.db import transaction
 
+from .analytics_repository import AnalyticsRepository
 from .author_repository import AuthorRepository
+from .bookOrderItem_repository import BookOrderItemRepository
 from .books_repository import BookRepository
 from .publisher_repository import PublisherRepository
 from .order_repository import OrderRepository
-from ..models import Author, Book, Publisher, Bookorder
+from .warehouseStock_repository import WarehouseStockRepository
+from .warehouse_repository import WarehouseRepository
+
+from ..models import Author, Book, Publisher, Bookorder, Bookorderitem, Warehouse, Warehousestock
 
 
 class UnitOfWork:
@@ -13,6 +18,13 @@ class UnitOfWork:
         self.books = BookRepository(Book)
         self.publishers = PublisherRepository(Publisher)
         self.orders = OrderRepository(Bookorder)
+
+        self.order_items = BookOrderItemRepository(Bookorderitem)
+        self.warehouses = WarehouseRepository(Warehouse)
+        self.stocks = WarehouseStockRepository(Warehousestock)
+
+        self.analytics = AnalyticsRepository()
+
         self._transaction = None
 
     def __enter__(self):
