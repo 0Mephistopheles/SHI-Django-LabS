@@ -6,19 +6,61 @@ from .forms import BookForm
 from DB_Management.models import UserProfile, Customer, Bookorder, Bookorderitem
 from django.utils import timezone
 
-# 1. Dispatcher (Розподілювач)
+from django.core.cache import cache
+from django.shortcuts import render
+from DB_Management.repositories.unit_of_work import UnitOfWork
+from DB_Management.services.visualization_service import SeabornVisualizationService
+import pandas as pd
+
+@login_required
+def admin_stats(request):
+    charts = cache.get('admin_analytics_charts')
+
+    if not charts:
+        uow = UnitOfWork()
+        viz = SeabornVisualizationService()
+        charts = {}
+
+        df_authors = pd.DataFrame(list(uow.analytics.get_books_count_by_author()))
+        if not df_authors.empty:
+            df_authors['full_name'] = df_authors['firstname'] + ' ' + df_authors['lastname']
+            charts['author_chart'] = viz.generate_bar(df_authors, 'books_count', 'full_name', 'Книги за авторами')
+
+        df_genres = pd.DataFrame(list(uow.analytics.get_popularity_by_genre()))
+        charts['genre_chart'] = viz.generate_pie(df_genres, 'total_sold', 'genre', 'Популярність жанрів')
+
+        df_sales = pd.DataFrame(list(uow.analytics.get_monthly_sales_dynamics()))
+        if not df_sales.empty:
+            df_sales['month_str'] = df_sales['month'].dt.strftime('%b %Y')
+            charts['sales_chart'] = viz.generate_line(df_sales, 'month_str', 'total_revenue', 'Прибуток')
+
+        df_customers = pd.DataFrame(list(uow.analytics.get_total_spent_by_customer()))
+        if not df_customers.empty:
+            df_customers['name'] = df_customers['customerid__firstname'] + ' ' + df_customers['customerid__lastname']
+            charts['customer_chart'] = viz.generate_bar(df_customers, 'total_spent', 'name', 'Топ покупців',
+                                                        color="magma")
+
+        df_publishers = pd.DataFrame(list(uow.analytics.get_publisher_book_stats()))
+        charts['publisher_chart'] = viz.generate_bar(df_publishers, 'books_published', 'name', 'Видавництва',
+                                                     color="coolwarm")
+
+        df_stock = pd.DataFrame(list(uow.analytics.get_low_stock_warehouses()))
+        charts['stock_chart'] = viz.generate_bar(df_stock, 'total_books', 'location', 'Дефіцит на складах',
+                                                 color="Reds_r")
+
+        cache.set('admin_analytics_charts', charts, 10)
+
+    return render(request, 'Interfaces/admin_stats.html', {'charts': charts})
+
+
 @login_required
 def index_dispatch(request):
-    """
-    Перевіряє права користувача і перенаправляє на відповідну сторінку.
-    """
+
     if request.user.is_superuser:
         return redirect('admin_dashboard')
     else:
         return redirect('user_dashboard')
 
-
-# --- ЛОГІКА АДМІНА (Image 2) ---
 
 @login_required
 def admin_dashboard(request):
@@ -27,13 +69,6 @@ def admin_dashboard(request):
 
     return render(request, 'Interfaces/admin_dashboard.html')
 
-
-@login_required
-def admin_stats(request):
-    if not request.user.is_superuser:
-        return redirect('index')
-
-    return render(request, 'Interfaces/admin_stats.html')
 
 
 

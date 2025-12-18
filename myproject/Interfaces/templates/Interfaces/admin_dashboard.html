@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Сторінка Адміна</title>
+    <title>Панель Адміністратора</title>
 </head>
 <body>
-    <h1>Сторінка Адміна</h1>
+    <h1>Панель Адміністратора</h1>
     <hr>
-    <ul>
-        <li>
-            <a href="{% url 'admin_stats' %}">Переглянути статистику</a>
-        </li>
-        <li>
-            <a href="{% url 'book_list' %}">Переглянути всі книги (Редагувати/Видалити)</a>
-        </li>
-        <li>
-            <a href="{% url 'book_create' %}">Додати книгу</a>
-        </li>
-    </ul>
+    <nav>
+        <ul>
+            <li><a href="{% url 'admin_stats' %}">Статистика</a></li>
+            <li><a href="{% url 'book_list' %}">Всі книги</a></li>
+            <li><a href="{% url 'book_create' %}">Додати книгу</a></li>
+        </ul>
+    </nav>
+    <hr>
+
+    <div class="content">
+        {% block content %}
+            <p>Виберіть дію в меню вище.</p>
+        {% endblock %}
+    </div>
+
+    <hr>
     <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
-        <button type="submit">Вийти (Logout)</button>
+        <button type="submit">Вийти</button>
     </form>
 </body>
 </html>
