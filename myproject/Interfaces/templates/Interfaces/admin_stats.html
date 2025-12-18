@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Статистика магазину</title>
+    <title>Статистика магазину (Seaborn)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f4f7f6; }
         .dashboard-header { background: white; padding: 20px; border-bottom: 1px solid #dee2e6; margin-bottom: 30px; }
         .chart-card { background: white; border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; height: 100%; }
         .chart-card:hover { transform: translateY(-5px); }
-        .chart-img { border-radius: 10px; max-width: 100%; height: auto; }
-        .badge-deficit { background-color: #ff4757; }
+        .chart-img { border-radius: 10px; max-width: 100%; height: auto; display: block; margin: 0 auto; }
     </style>
 </head>
 <body>
@@ -20,7 +19,7 @@
     <div class="container d-flex justify-content-between align-items-center">
         <div>
             <h1 class="h3 mb-0 text-primary">Аналітичний звіт</h1>
-            <p class="text-muted mb-0">Повний огляд діяльності книжкового магазину</p>
+            <p class="text-muted mb-0">Статичний огляд даних за допомогою Seaborn & Matplotlib</p>
         </div>
         <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-primary shadow-sm">
             ← Назад до панелі Адміна
@@ -57,9 +56,9 @@
             </div>
         </div>
 
-        <div class="col-lg-6">
+        <div class="col-12">
             <div class="card chart-card p-3">
-                <h5 class="card-title text-center mb-3">Динаміка продажів по місяцях</h5>
+                <h5 class="card-title text-center mb-3">Динаміка доходу по місяцях</h5>
                 <div class="text-center">
                     {% if charts.sales_chart %}
                         <img src="data:image/png;base64,{{ charts.sales_chart }}" class="chart-img" style="width: 100%" alt="Sales Dynamics">
@@ -72,10 +71,12 @@
 
         <div class="col-lg-6">
             <div class="card chart-card p-3">
-                <h6 class="text-center text-muted mb-2">Найактивніші клієнти</h6>
+                <h5 class="card-title text-center mb-3">Найактивніші клієнти</h5>
                 <div class="text-center">
                     {% if charts.customer_chart %}
                         <img src="data:image/png;base64,{{ charts.customer_chart }}" class="chart-img" alt="Customers">
+                    {% else %}
+                        <div class="alert alert-light">Дані про клієнтів відсутні</div>
                     {% endif %}
                 </div>
             </div>
@@ -83,18 +84,20 @@
 
         <div class="col-lg-6">
             <div class="card chart-card p-3">
-                <h6 class="text-center text-muted mb-2">Книги за видавництвами</h6>
+                <h5 class="card-title text-center mb-3">Книги за видавництвами</h5>
                 <div class="text-center">
                     {% if charts.publisher_chart %}
                         <img src="data:image/png;base64,{{ charts.publisher_chart }}" class="chart-img" alt="Publishers">
+                    {% else %}
+                        <div class="alert alert-light">Дані про видавництва відсутні</div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-6">
+        <div class="col-12">
             <div class="card chart-card p-3 border-danger">
-                <h6 class="text-center text-danger mb-2">Дефіцит є на таких складах</h6>
+                <h5 class="card-title text-center text-danger mb-3">Дефіцит на складах</h5>
                 <div class="text-center">
                     {% if charts.stock_chart %}
                         <img src="data:image/png;base64,{{ charts.stock_chart }}" class="chart-img" alt="Low Stock">
@@ -109,7 +112,7 @@
 </main>
 
 <footer class="text-center py-4 text-muted">
-    <small>© 2025 BookStore Analytics System</small>
+    <small>© 2025 BookStore Analytics System (Static Mode)</small>
 </footer>
 
 </body>

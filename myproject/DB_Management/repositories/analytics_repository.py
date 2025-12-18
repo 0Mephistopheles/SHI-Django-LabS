@@ -1,5 +1,5 @@
-from django.db.models import Count, Sum, F
-from django.db.models.functions import TruncMonth
+from django.db.models import Count, Sum, F, Q, Value
+from django.db.models.functions import TruncMonth, Concat
 from .base_repository import BaseRepository
 from ..models import Author, Book, Bookorder, Publisher, Warehouse, Bookorderitem
 
@@ -20,45 +20,63 @@ class AnalyticsRepository(BaseRepository):
     def update(self, id, data):
         raise NotImplementedError("Аналітика тільки для читання")
 
-    def get_books_count_by_author(self):
-        """1. Кількість книг кожного автора (Group By + Count)"""
-        return Author.objects.annotate(
-            books_count=Count('book')
-        ).filter(books_count__gt=0).values('firstname', 'lastname', 'books_count').order_by('-books_count')
+    def get_books_count_by_author(self, name_query=None, min_books=0):
+        queryset = Author.objects.annotate(
+            books_count=Count('book'),
+            full_name=Concat('firstname', Value(' '), 'lastname')
+        )
 
-    def get_total_spent_by_customer(self):
-        """2. Загальна сума замовлень кожного клієнта (Group By + Sum)"""
+        if name_query:
+            query = name_query.strip()
+            queryset = queryset.filter(
+                Q(firstname__icontains=query) |
+                Q(lastname__icontains=query) |
+                Q(full_name__icontains=query)  # Тепер шукає і по повному імені!
+            )
+
+        return queryset.filter(books_count__gte=min_books).values(
+            'firstname', 'lastname', 'books_count'
+        ).order_by('-books_count')
+
+    def get_total_spent_by_customer(self, min_spent=0):
+        """Загальна сума замовлень клієнта з фільтром за мін. витратами"""
         return Bookorder.objects.values(
-            'customerid__firstname',
-            'customerid__lastname'
+            'customerid__firstname', 'customerid__lastname'
         ).annotate(
             total_spent=Sum('totalamount')
-        ).order_by('-total_spent')
+        ).filter(total_spent__gte=min_spent).order_by('-total_spent')
 
-    def get_popularity_by_genre(self):
-        """3. Популярність жанрів за кількістю проданих книг (Join + Sum)"""
-        return Book.objects.values('genre').annotate(
+    def get_popularity_by_genre(self, top_n=None):
+        """Популярність жанрів (Топ N)"""
+        queryset = Book.objects.values('genre').annotate(
             total_sold=Sum('bookorderitem__quantity')
         ).filter(total_sold__gt=0).order_by('-total_sold')
+        if top_n:
+            queryset = queryset[:int(top_n)]
+        return queryset
 
-    def get_monthly_sales_dynamics(self):
-        """4. Динаміка продажів по місяцях (Time-series aggregation)"""
-        return Bookorder.objects.annotate(
+    def get_monthly_sales_dynamics(self, start_date=None, end_date=None):
+        """Динаміка продажів з фільтром за датами"""
+        queryset = Bookorder.objects.all()
+        if start_date:
+            queryset = queryset.filter(orderdate__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(orderdate__lte=end_date)
+        return queryset.annotate(
             month=TruncMonth('orderdate')
         ).values('month').annotate(
             total_revenue=Sum('totalamount')
         ).order_by('month')
 
     def get_publisher_book_stats(self):
-        """5. Статистика видавництв за кількістю книг (Count)"""
+        """Статистика видавництв (без змін)"""
         return Publisher.objects.annotate(
             books_published=Count('book')
         ).values('name', 'books_published').filter(books_published__gt=0).order_by('-books_published')
 
     def get_low_stock_warehouses(self, threshold=100):
-        """6. Склади з низьким запасом книг (Having через Filter)"""
+        """Склади з низьким запасом (динамічний поріг)"""
         return Warehouse.objects.annotate(
             total_books=Sum('warehousestock__quantity')
-        ).filter(
-            total_books__lt=threshold
-        ).values('location', 'total_books').order_by('total_books')
+        ).filter(total_books__lt=threshold).values('location', 'total_books').order_by('total_books')
+
