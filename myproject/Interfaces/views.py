@@ -20,7 +20,7 @@ def admin_stats_plotly(request):
     if not request.user.is_superuser:
         return redirect('index')
 
-    # Отримання параметрів фільтрації
+    # 1. Отримання параметрів фільтрації
     threshold = int(request.GET.get('threshold', 100))
     author_query = request.GET.get('author_query', '').strip()
     min_books = int(request.GET.get('min_books', 1))
@@ -29,15 +29,16 @@ def admin_stats_plotly(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
 
-    # Динамічний ключ кешу
+    # 2. Перевірка кешу
     cache_key = f"plotly_{threshold}_{author_query}_{min_books}_{min_spent}_{top_genres}_{start_date}_{end_date}"
-    charts = cache.get(cache_key)
+    cached_payload = cache.get(cache_key)
 
-    if not charts:
+    if not cached_payload:
         uow = UnitOfWork()
         viz = PlotlyVisualizationService()
         charts = {}
 
+        # Отримання даних через репозиторій
         df_authors = pd.DataFrame(list(uow.analytics.get_books_count_by_author(author_query, min_books)))
         df_genres = pd.DataFrame(list(uow.analytics.get_popularity_by_genre(top_genres)))
         df_sales = pd.DataFrame(list(uow.analytics.get_monthly_sales_dynamics(start_date, end_date)))
@@ -45,6 +46,7 @@ def admin_stats_plotly(request):
         df_publishers = pd.DataFrame(list(uow.analytics.get_publisher_book_stats()))
         df_stock = pd.DataFrame(list(uow.analytics.get_low_stock_warehouses(threshold)))
 
+        # Генерація інтерактивних графіків
         charts['author_chart'] = viz.generate_author_bar(df_authors)
         charts['genre_chart'] = viz.generate_genre_pie(df_genres)
         charts['sales_chart'] = viz.generate_sales_line(df_sales)
@@ -52,10 +54,20 @@ def admin_stats_plotly(request):
         charts['publisher_chart'] = viz.generate_publisher_bar(df_publishers)
         charts['stock_chart'] = viz.generate_stock_bar(df_stock)
 
-        cache.set(cache_key, charts, 300)
+        # 3. РОЗРАХУНОК СТАТИСТИКИ PANDAS
+        stats = {
+            'avg_monthly_revenue': round(df_sales['total_revenue'].mean(), 2) if not df_sales.empty else 0,
+            'median_customer_spend': round(df_customers['total_spent'].median(), 2) if not df_customers.empty else 0,
+            'max_books_by_author': df_authors['books_count'].max() if not df_authors.empty else 0,
+            'deficit_warehouses_count': len(df_stock)
+        }
+
+        cached_payload = {'charts': charts, 'stats': stats}
+        cache.set(cache_key, cached_payload, 300)
 
     context = {
-        'charts': charts,
+        'charts': cached_payload['charts'],
+        'stats': cached_payload['stats'],
         'filters': {
             'threshold': threshold, 'author_query': author_query,
             'min_books': min_books, 'min_spent': min_spent,
@@ -64,56 +76,68 @@ def admin_stats_plotly(request):
     }
     return render(request, 'Interfaces/admin_stats_plotly.html', context)
 
+
+
 @login_required
 def admin_stats(request):
-    charts = cache.get('admin_analytics_charts_v2') # Окремий ключ для кешу
+    if not request.user.is_superuser:
+        return redirect('index')
 
-    if not charts:
+    threshold = int(request.GET.get('threshold', 100))
+    author_query = request.GET.get('author_query', '').strip()
+
+    cache_key = f"seaborn_v3_{threshold}_{author_query}"
+    cache_data = cache.get(cache_key)
+
+    if not cache_data:
         uow = UnitOfWork()
         viz = SeabornVisualizationService()
         conc_service = ConcurrencyService()
         charts = {}
 
-        df_authors = pd.DataFrame(list(uow.analytics.get_books_count_by_author()))
+        df_authors = pd.DataFrame(list(uow.analytics.get_books_count_by_author(author_query)))
+        df_genres = pd.DataFrame(list(uow.analytics.get_popularity_by_genre()))
+        df_sales = pd.DataFrame(list(uow.analytics.get_monthly_sales_dynamics()))
+        df_customers = pd.DataFrame(list(uow.analytics.get_total_spent_by_customer()))
+        df_stock = pd.DataFrame(list(uow.analytics.get_low_stock_warehouses(threshold)))
+
         if not df_authors.empty:
             df_authors['full_name'] = df_authors['firstname'] + ' ' + df_authors['lastname']
-            charts['author_chart'] = viz.generate_bar(df_authors, 'books_count', 'full_name')
+            charts['author_chart'] = viz.generate_bar(df_authors, x='books_count', y='full_name', title='Автори')
 
-        df_genres = pd.DataFrame(list(uow.analytics.get_popularity_by_genre()))
-        charts['genre_chart'] = viz.generate_pie(df_genres, 'total_sold', 'genre')
+        charts['genre_chart'] = viz.generate_pie(df_genres, values='total_sold', labels='genre', title='Жанри')
 
-        df_sales = pd.DataFrame(list(uow.analytics.get_monthly_sales_dynamics()))
         if not df_sales.empty:
             df_sales['month_str'] = df_sales['month'].dt.strftime('%b %Y')
-            charts['sales_chart'] = viz.generate_line(df_sales, 'month_str', 'total_revenue')
+            charts['sales_chart'] = viz.generate_line(df_sales, x='month_str', y='total_revenue', title='Продажі')
 
-        df_customers = pd.DataFrame(list(uow.analytics.get_total_spent_by_customer()))
         if not df_customers.empty:
             df_customers['name'] = df_customers['customerid__firstname'] + ' ' + df_customers['customerid__lastname']
-            charts['customer_chart'] = viz.generate_bar(df_customers, 'total_spent', 'name',
+            charts['customer_chart'] = viz.generate_bar(df_customers, x='total_spent', y='name', title='Клієнти',
                                                         color="magma")
 
-        df_publishers = pd.DataFrame(list(uow.analytics.get_publisher_book_stats()))
-        charts['publisher_chart'] = viz.generate_bar(df_publishers, 'books_published', 'name',
-                                                     color="coolwarm")
-
-        df_stock = pd.DataFrame(list(uow.analytics.get_low_stock_warehouses()))
-        charts['stock_chart'] = viz.generate_bar(df_stock, 'total_books', 'location',
+        charts['stock_chart'] = viz.generate_bar(df_stock, x='total_books', y='location', title='Дефіцит',
                                                  color="Reds_r")
 
-        cache.set('admin_analytics_charts', charts, 10)
-
+        stats = {
+            'avg_monthly_revenue': round(df_sales['total_revenue'].mean(), 2) if not df_sales.empty else 0,
+            'median_customer_spend': round(df_customers['total_spent'].median(), 2) if not df_customers.empty else 0,
+            'max_books_by_author': df_authors['books_count'].max() if not df_authors.empty else 0,
+            'deficit_warehouses_count': len(df_stock)
+        }
 
         performance_data = conc_service.run_experiment(total_requests=150)
         df_perf = pd.DataFrame(performance_data)
-        
-        # Генерація графіка продуктивності
         charts['performance_chart'] = viz.generate_performance_chart(df_perf)
 
-        cache.set('admin_analytics_charts_v2', charts, 60) # Кешуємо на 1 хвилину
+        cache_data = {'charts': charts, 'stats': stats}
+        cache.set(cache_key, cache_data, 60)
 
-    return render(request, 'Interfaces/admin_stats.html', {'charts': charts})
-
+    return render(request, 'Interfaces/admin_stats.html', {
+        'charts': cache_data['charts'],
+        'stats': cache_data['stats'],
+        'filters': {'threshold': threshold, 'author_query': author_query}
+    })
 
 @login_required
 def index_dispatch(request):

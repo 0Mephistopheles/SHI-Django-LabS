@@ -31,6 +31,32 @@
 </header>
 
 <main class="container mb-5">
+    <div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #e3f2fd;">
+            <div class="text-muted small fw-bold text-uppercase">Сер. дохід / місяць</div>
+            <div class="h4 mb-0 text-primary">{{ stats.avg_monthly_revenue }} грн</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #f1f8e9;">
+            <div class="text-muted small fw-bold text-uppercase">Медіана витрат клієнта</div>
+            <div class="h4 mb-0 text-success">{{ stats.median_customer_spend }} грн</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #fff3e0;">
+            <div class="text-muted small fw-bold text-uppercase">Рекорд книг у автора</div>
+            <div class="h4 mb-0 text-warning">{{ stats.max_books_by_author }} од.</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #ffeeb2;">
+            <div class="text-muted small fw-bold text-uppercase">Складів у дефіциті</div>
+            <div class="h4 mb-0 text-danger">{{ stats.deficit_warehouses_count }}</div>
+        </div>
+    </div>
+    </div>
     <form method="GET" id="analyticsForm">
         <div class="row g-4">
 

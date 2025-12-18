@@ -5,7 +5,6 @@ import seaborn as sns
 import io
 import base64
 import pandas as pd
-from DB_Management.repositories.analytics_repository import AnalyticsRepository
 
 class SeabornVisualizationService:
     def __init__(self):
@@ -20,22 +19,26 @@ class SeabornVisualizationService:
         plt.close()
         return img_str
 
-    def generate_bar(self, df, x, y, color=None):
+    def generate_bar(self, df, x, y, title="", color=None):
         if df.empty: return None
         plt.figure(figsize=(8, 5))
+        # Використовуємо палітру тільки якщо color не є заголовком
         sns.barplot(data=df, x=x, y=y, palette=color or self.palette)
+        plt.title(title, fontsize=12)
         return self._get_base64_image()
 
-    def generate_pie(self, df, values, labels):
+    def generate_pie(self, df, values, labels, title=""):
         if df.empty: return None
         plt.figure(figsize=(6, 6))
         plt.pie(df[values], labels=df[labels], autopct='%1.1f%%', colors=sns.color_palette("pastel"))
+        plt.title(title, fontsize=12)
         return self._get_base64_image()
 
-    def generate_line(self, df, x, y):
+    def generate_line(self, df, x, y, title=""):
         if df.empty: return None
         plt.figure(figsize=(10, 4))
         sns.lineplot(data=df, x=x, y=y, marker='o', color='#2ecc71', linewidth=2.5)
+        plt.title(title, fontsize=12)
         plt.xticks(rotation=45)
         return self._get_base64_image()
 
