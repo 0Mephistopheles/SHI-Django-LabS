@@ -1,30 +1,32 @@
 import random
 from datetime import date
+from Services.generator.author.author_data import (
+    FIRST_NAMES,
+    LAST_NAMES,
+    NATIONALITIES,
+    CAPACITY_RANGE,
+)
+
 class AuthorGenerator:
 
-from Services.generator.author.author_data import (
-FIRST_NAMES,
-LAST_NAMES,
-NATIONALITIES,
-CAPACITY_RANGE,
-    )
     @staticmethod
-    def _random_birth_date() -> str:
+    def _random_birthdate() -> date:
         year = random.randint(*BIRTH_YEAR_RANGE)
         month = random.randint(1, 12)
-        day = random.randint(1, 28)
-        return date(year, month, day).isoformat()
+        day = random.randint(1, 28)  # to avoid invalid dates
+        return date(year, month, day)
 
     @staticmethod
     def _random_biography() -> str:
-        return "This is a placeholder biography."
+        # Placeholder biography text, you can improve this or use some lorem ipsum generator
+        return "This author is well known for their remarkable contributions to literature."
 
     @staticmethod
     def generate_one() -> dict:
         return {
-            "first_name": random.choice(FIRST_NAMES),
-            "last_name": random.choice(LAST_NAMES),
-            "birth_date": AuthorGenerator._random_birth_date(),
+            "firstname": random.choice(FIRST_NAMES),
+            "lastname": random.choice(LAST_NAMES),
+            "birthdate": AuthorGenerator._random_birthdate(),
             "nationality": random.choice(NATIONALITIES),
             "biography": AuthorGenerator._random_biography(),
         }
