@@ -5,6 +5,7 @@ import seaborn as sns
 import io
 import base64
 import pandas as pd
+from DB_Management.repositories.analytics_repository import AnalyticsRepository
 
 class SeabornVisualizationService:
     def __init__(self):
@@ -36,4 +37,14 @@ class SeabornVisualizationService:
         plt.figure(figsize=(10, 4))
         sns.lineplot(data=df, x=x, y=y, marker='o', color='#2ecc71', linewidth=2.5)
         plt.xticks(rotation=45)
+        return self._get_base64_image()
+
+    def generate_performance_chart(self, df, title="Аналіз продуктивності запитів"):
+        if df.empty: return None
+        plt.figure(figsize=(10, 5))
+        sns.lineplot(data=df, x='workers', y='execution_time', marker='o', color='red', linewidth=2)
+        plt.title(title, fontsize=14)
+        plt.xlabel('Кількість потоків (Threads)')
+        plt.ylabel('Загальний час виконання (секунди)')
+        plt.grid(True, linestyle='--', alpha=0.7)
         return self._get_base64_image()

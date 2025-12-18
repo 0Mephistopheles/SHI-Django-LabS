@@ -11,6 +11,7 @@ from django.core.cache import cache
 from django.shortcuts import render
 from DB_Management.repositories.unit_of_work import UnitOfWork
 from DB_Management.services.seaborn_service import SeabornVisualizationService
+from DB_Management.services.concurrency_service import ConcurrencyService
 import pandas as pd
 
 
@@ -65,11 +66,12 @@ def admin_stats_plotly(request):
 
 @login_required
 def admin_stats(request):
-    charts = cache.get('admin_analytics_charts')
+    charts = cache.get('admin_analytics_charts_v2') # Окремий ключ для кешу
 
     if not charts:
         uow = UnitOfWork()
         viz = SeabornVisualizationService()
+        conc_service = ConcurrencyService()
         charts = {}
 
         df_authors = pd.DataFrame(list(uow.analytics.get_books_count_by_author()))
@@ -100,6 +102,15 @@ def admin_stats(request):
                                                  color="Reds_r")
 
         cache.set('admin_analytics_charts', charts, 10)
+
+
+        performance_data = conc_service.run_experiment(total_requests=150)
+        df_perf = pd.DataFrame(performance_data)
+        
+        # Генерація графіка продуктивності
+        charts['performance_chart'] = viz.generate_performance_chart(df_perf)
+
+        cache.set('admin_analytics_charts_v2', charts, 60) # Кешуємо на 1 хвилину
 
     return render(request, 'Interfaces/admin_stats.html', {'charts': charts})
 

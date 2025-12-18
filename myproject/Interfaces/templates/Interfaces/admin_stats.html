@@ -107,6 +107,20 @@
                 </div>
             </div>
         </div>
+        
+        <div class="col-lg-12">
+            <div class="card chart-card p-4 border-primary">
+                <h4 class="card-title text-center text-primary mb-3">Оптимізація доступу: Багатопоточність</h4>
+                <p class="text-center text-muted">Графік показує час виконання 150 запитів при різній кількості потоків</p>
+                <div class="text-center">
+                    {% if charts.performance_chart %}
+                        <img src="data:image/png;base64,{{ charts.performance_chart }}" class="chart-img shadow" style="width: 80%" alt="Performance">
+                    {% else %}
+                        <div class="alert alert-warning">Проводиться розрахунок метрик паралельного доступу...</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
     </div>
 </main>

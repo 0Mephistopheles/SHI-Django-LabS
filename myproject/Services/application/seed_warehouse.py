@@ -1,6 +1,5 @@
-from myproject.Services.generator.warehouse.warehouse_generator import WarehouseGenerator
-from myproject.DB_Management.repositories.unit_of_work import UnitOfWork
-
+from Services.generator.warehouse.warehouse_generator import WarehouseGenerator
+from DB_Management.repositories.unit_of_work import UnitOfWork
 
 def seed_warehouses(count: int):
     with UnitOfWork() as uow:

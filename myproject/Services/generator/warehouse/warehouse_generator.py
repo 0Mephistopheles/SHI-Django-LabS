@@ -1,6 +1,6 @@
 # services/generator/warehouse_generator.py
 import random
-from .warehouse_data import (
+from Services.generator.warehouse.warehouse_data import (
     LOCATIONS,
     FIRST_NAMES,
     LAST_NAMES,
