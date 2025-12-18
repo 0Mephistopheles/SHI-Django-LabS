@@ -9,6 +9,7 @@ urlpatterns = [
     # Адмінська частина
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin-stats/', views.admin_stats, name='admin_stats'),
+    path('admin-stats-plotly/', views.admin_stats_plotly, name='admin_stats_plotly'),
 
     # Користувацька частина
     path('dashboard/', views.user_dashboard, name='user_dashboard'),

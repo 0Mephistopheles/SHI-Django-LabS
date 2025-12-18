@@ -1,4 +1,3 @@
-# Interfaces/services/visualization_service.py
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -21,24 +20,31 @@ class SeabornVisualizationService:
         plt.close()
         return img_str
 
-    def generate_bar(self, df, x, y, title, color=None):
+    def generate_bar(self, df, x, y, color=None):
         if df.empty: return None
         plt.figure(figsize=(8, 5))
         sns.barplot(data=df, x=x, y=y, palette=color or self.palette)
-        plt.title(title, fontsize=12)
         return self._get_base64_image()
 
-    def generate_pie(self, df, values, labels, title):
+    def generate_pie(self, df, values, labels):
         if df.empty: return None
         plt.figure(figsize=(6, 6))
         plt.pie(df[values], labels=df[labels], autopct='%1.1f%%', colors=sns.color_palette("pastel"))
-        plt.title(title, fontsize=12)
         return self._get_base64_image()
 
-    def generate_line(self, df, x, y, title):
+    def generate_line(self, df, x, y):
         if df.empty: return None
         plt.figure(figsize=(10, 4))
         sns.lineplot(data=df, x=x, y=y, marker='o', color='#2ecc71', linewidth=2.5)
         plt.xticks(rotation=45)
-        plt.title(title, fontsize=12)
+        return self._get_base64_image()
+
+    def generate_performance_chart(self, df, title="Аналіз продуктивності запитів"):
+        if df.empty: return None
+        plt.figure(figsize=(10, 5))
+        sns.lineplot(data=df, x='workers', y='execution_time', marker='o', color='red', linewidth=2)
+        plt.title(title, fontsize=14)
+        plt.xlabel('Кількість потоків (Threads)')
+        plt.ylabel('Загальний час виконання (секунди)')
+        plt.grid(True, linestyle='--', alpha=0.7)
         return self._get_base64_image()

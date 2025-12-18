@@ -2,6 +2,11 @@ from rest_framework.response import Response
 from rest_framework import status, viewsets
 from DB_Management.repositories.unit_of_work import UnitOfWork
 from .serializers import AuthorSerializer, BookSerializer, PublisherSerializer, BookOrderSerializer
+import pandas as pd
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import viewsets, status
+from DB_Management.repositories.unit_of_work import UnitOfWork
 
 
 class AuthorViewSet(viewsets.ViewSet):
@@ -196,3 +201,44 @@ class BookOrderViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
+
+
+class AnalyticsViewSet(viewsets.ViewSet):
+    
+    @action(detail=False, methods=['get'], url_path='data-summary')
+    def get_data_summary(self, request):
+        uow = UnitOfWork()
+        # Тут виклик правильний (через .analytics)
+        raw_data = list(uow.analytics.get_total_spent_by_customer())
+        
+        if not raw_data:
+            return Response({"error": "No data available"}, status=status.HTTP_404_NOT_FOUND)
+
+        df = pd.DataFrame(raw_data)
+        
+        stats = {
+            "mean": float(df['total_spent'].mean()),
+            "median": float(df['total_spent'].median()),
+            "min": float(df['total_spent'].min()),
+            "max": float(df['total_spent'].max()),
+            "std_dev": float(df['total_spent'].std())
+        }
+        
+        return Response({
+            "data": df.to_dict(orient='records'),
+            "statistics": stats
+        })
+
+    @action(detail=False, methods=['get'], url_path='all-stats')
+    def get_all_aggregated_data(self, request):
+        uow = UnitOfWork()
+        # Виправляємо звернення до методів через uow.analytics
+        results = {
+            "books_by_author": list(uow.analytics.get_books_count_by_author()),
+            "spent_by_customer": list(uow.analytics.get_total_spent_by_customer()),
+            "popularity_by_genre": list(uow.analytics.get_popularity_by_genre()),
+            "books_by_publisher": list(uow.analytics.get_publisher_book_stats()),
+            "revenue_by_month": list(uow.analytics.get_monthly_sales_dynamics()),
+            # "avg_price_by_genre": ... (треба додати метод в AnalyticsRepository)
+        }
+        return Response(results)
