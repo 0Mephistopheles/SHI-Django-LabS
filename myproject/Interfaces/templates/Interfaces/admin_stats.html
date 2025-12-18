@@ -22,12 +22,39 @@
             <p class="text-muted mb-0">Статичний огляд даних за допомогою Seaborn & Matplotlib</p>
         </div>
         <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-primary shadow-sm">
-            ← Назад до панелі Адміна
+            Назад до панелі Адміна
         </a>
     </div>
 </header>
 
 <main class="container mb-5">
+    <div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card chart-card p-3 text-center shadow-sm">
+            <span class="text-muted small">Середній чек</span>
+            <h4 class="mb-0">{{ stats.avg_monthly_revenue }} грн</h4>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card chart-card p-3 text-center shadow-sm">
+            <span class="text-muted small">Медіана покупок</span>
+            <h4 class="mb-0">{{ stats.median_customer_spend }} грн</h4>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card chart-card p-3 text-center shadow-sm">
+            <span class="text-muted small">Макс. книг у автора</span>
+            <h4 class="mb-0">{{ stats.max_books_by_author }}</h4>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card chart-card p-3 text-center shadow-sm border-danger">
+            <span class="text-danger small">Складів < {{ filters.threshold }} од.</span>
+            <h4 class="mb-0 text-danger">{{ stats.deficit_warehouses_count }}</h4>
+        </div>
+    </div>
+    </div>
+
     <div class="row g-4">
 
         <div class="col-lg-6">
