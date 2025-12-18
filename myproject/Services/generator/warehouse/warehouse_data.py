@@ -1,5 +1,3 @@
-# services/generator/warehouse_data.py
-
 LOCATIONS = [
     "Kyiv - Central",
     "Lviv - Industrial Zone",
@@ -24,4 +22,4 @@ LAST_NAMES = [
     "Bondarenko",
 ]
 
-CAPACITY_RANGE = (50, 10000)
+CAPACITY_RANGE = (5000, 10000)
