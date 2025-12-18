@@ -42,3 +42,13 @@ class SeabornVisualizationService:
         plt.xticks(rotation=45)
         plt.title(title, fontsize=12)
         return self._get_base64_image()
+
+    def generate_performance_chart(self, df, title="Аналіз продуктивності запитів"):
+        if df.empty: return None
+        plt.figure(figsize=(10, 5))
+        sns.lineplot(data=df, x='workers', y='execution_time', marker='o', color='red', linewidth=2)
+        plt.title(title, fontsize=14)
+        plt.xlabel('Кількість потоків (Threads)')
+        plt.ylabel('Загальний час виконання (секунди)')
+        plt.grid(True, linestyle='--', alpha=0.7)
+        return self._get_base64_image()

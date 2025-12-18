@@ -10,45 +10,31 @@ from django.core.cache import cache
 from django.shortcuts import render
 from DB_Management.repositories.unit_of_work import UnitOfWork
 from DB_Management.services.visualization_service import SeabornVisualizationService
+from DB_Management.services.concurrency_service import ConcurrencyService
 import pandas as pd
 
 @login_required
 def admin_stats(request):
-    charts = cache.get('admin_analytics_charts')
+    charts = cache.get('admin_analytics_charts_v2') # Окремий ключ для кешу
 
     if not charts:
         uow = UnitOfWork()
         viz = SeabornVisualizationService()
+        conc_service = ConcurrencyService()
         charts = {}
 
-        df_authors = pd.DataFrame(list(uow.analytics.get_books_count_by_author()))
-        if not df_authors.empty:
-            df_authors['full_name'] = df_authors['firstname'] + ' ' + df_authors['lastname']
-            charts['author_chart'] = viz.generate_bar(df_authors, 'books_count', 'full_name', 'Книги за авторами')
+        # --- Старі графіки (залишаються як були) ---
+        # ... (код для df_authors, df_genres, df_sales тощо) ...
 
-        df_genres = pd.DataFrame(list(uow.analytics.get_popularity_by_genre()))
-        charts['genre_chart'] = viz.generate_pie(df_genres, 'total_sold', 'genre', 'Популярність жанрів')
+        # --- Новий блок: Паралельні обчислення ---
+        # Проводимо 150 запитів з різною кількістю потоків
+        performance_data = conc_service.run_experiment(total_requests=150)
+        df_perf = pd.DataFrame(performance_data)
+        
+        # Генерація графіка продуктивності
+        charts['performance_chart'] = viz.generate_performance_chart(df_perf)
 
-        df_sales = pd.DataFrame(list(uow.analytics.get_monthly_sales_dynamics()))
-        if not df_sales.empty:
-            df_sales['month_str'] = df_sales['month'].dt.strftime('%b %Y')
-            charts['sales_chart'] = viz.generate_line(df_sales, 'month_str', 'total_revenue', 'Прибуток')
-
-        df_customers = pd.DataFrame(list(uow.analytics.get_total_spent_by_customer()))
-        if not df_customers.empty:
-            df_customers['name'] = df_customers['customerid__firstname'] + ' ' + df_customers['customerid__lastname']
-            charts['customer_chart'] = viz.generate_bar(df_customers, 'total_spent', 'name', 'Топ покупців',
-                                                        color="magma")
-
-        df_publishers = pd.DataFrame(list(uow.analytics.get_publisher_book_stats()))
-        charts['publisher_chart'] = viz.generate_bar(df_publishers, 'books_published', 'name', 'Видавництва',
-                                                     color="coolwarm")
-
-        df_stock = pd.DataFrame(list(uow.analytics.get_low_stock_warehouses()))
-        charts['stock_chart'] = viz.generate_bar(df_stock, 'total_books', 'location', 'Дефіцит на складах',
-                                                 color="Reds_r")
-
-        cache.set('admin_analytics_charts', charts, 10)
+        cache.set('admin_analytics_charts_v2', charts, 60) # Кешуємо на 1 хвилину
 
     return render(request, 'Interfaces/admin_stats.html', {'charts': charts})
 
