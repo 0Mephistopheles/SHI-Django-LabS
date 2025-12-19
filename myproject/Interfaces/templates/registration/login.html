@@ -1,29 +1,143 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
+    <meta charset="UTF-8">
     <title>Вхід у систему</title>
+
+    <style>
+        :root {
+            --lapis-blue: #2f6fae;
+            --lapis-light: #eaf2fb;
+            --lapis-hover: #245a8d;
+            --text-dark: #1f2d3d;
+            --border-light: #d6e2f1;
+            --error-red: #c0392b;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            background-color: var(--lapis-light);
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            padding: 35px 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            text-align: center;
+            color: var(--lapis-blue);
+            font-weight: 600;
+        }
+
+        .error-message {
+            background-color: #fdecea;
+            color: var(--error-red);
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        form p {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #4a5d73;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--lapis-blue);
+            box-shadow: 0 0 0 2px rgba(47, 111, 174, 0.15);
+        }
+
+        button {
+            width: 100%;
+            margin-top: 10px;
+            background-color: var(--lapis-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--lapis-hover);
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-light);
+            margin: 25px 0 15px;
+        }
+
+        .footer-text {
+            text-align: center;
+            font-size: 13px;
+            color: #6b7c93;
+        }
+    </style>
 </head>
 <body>
+
+<div class="login-container">
     <h1>Вхід у бібліотеку</h1>
 
     {% if form.errors %}
-        <p>Ваш логін або пароль неправильні. Спробуйте ще раз.</p>
+        <div class="error-message">
+            Ваш логін або пароль неправильні. Спробуйте ще раз.
+        </div>
     {% endif %}
 
     <form method="post" action="{% url 'login' %}">
         {% csrf_token %}
         <p>
-            <label>Ім'я користувача:</label>
+            <label for="id_username">Ім'я користувача</label>
             {{ form.username }}
         </p>
         <p>
-            <label>Пароль:</label>
+            <label for="id_password">Пароль</label>
             {{ form.password }}
         </p>
         <button type="submit">Увійти</button>
     </form>
 
     <hr>
-    <p>Ще не маєте акаунту? Зверніться до адміністратора.</p>
+
+    <p class="footer-text">
+        Ще не маєте акаунту? Зверніться до адміністратора.
+    </p>
+</div>
+
 </body>
 </html>

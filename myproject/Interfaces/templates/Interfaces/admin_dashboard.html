@@ -1,19 +1,124 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
+    <meta charset="UTF-8">
     <title>Панель Адміністратора</title>
+
+    <style>
+        :root {
+            --lapis-blue: #2f6fae;
+            --lapis-light: #eaf2fb;
+            --lapis-hover: #245a8d;
+            --text-dark: #1f2d3d;
+            --border-light: #d6e2f1;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            background-color: var(--lapis-light);
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            background: #ffffff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--lapis-blue);
+            font-weight: 600;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-light);
+            margin: 20px 0;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--lapis-blue);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        nav a:hover {
+            background-color: var(--lapis-blue);
+            color: white;
+        }
+
+        .content {
+            padding: 20px 0;
+            min-height: 200px;
+        }
+
+        .content p {
+            font-size: 15px;
+            color: #4a5d73;
+        }
+
+        form {
+            text-align: right;
+        }
+
+        button {
+            background-color: var(--lapis-blue);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--lapis-hover);
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                flex-direction: column;
+            }
+
+            form {
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
+
+<div class="container">
     <h1>Панель Адміністратора</h1>
     <hr>
+
     <nav>
         <ul>
-            <li><a href="{% url 'admin_stats' %}">Переглянути статистику (Seaborn)</a></li>
-            <li><a href="{% url 'admin_stats_plotly' %}">Переглянути статистику (Plotly)</a></li>
+            <li><a href="{% url 'admin_stats' %}">Статистика (Seaborn)</a></li>
+            <li><a href="{% url 'admin_stats_plotly' %}">Статистика (Plotly)</a></li>
             <li><a href="{% url 'book_list' %}">Всі книги</a></li>
             <li><a href="{% url 'book_create' %}">Додати книгу</a></li>
         </ul>
     </nav>
+
     <hr>
 
     <div class="content">
@@ -23,9 +128,12 @@
     </div>
 
     <hr>
+
     <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit">Вийти</button>
     </form>
+</div>
+
 </body>
 </html>

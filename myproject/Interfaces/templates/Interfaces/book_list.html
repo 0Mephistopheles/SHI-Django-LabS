@@ -1,36 +1,188 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
+    <meta charset="UTF-8">
     <title>Список книг</title>
+
+    <style>
+        :root {
+            --lapis-blue: #2f6fae;
+            --lapis-light: #eaf2fb;
+            --lapis-hover: #245a8d;
+            --text-dark: #1f2d3d;
+            --border-light: #d6e2f1;
+            --success-green: #2ecc71;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            background-color: var(--lapis-light);
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--lapis-blue);
+            font-weight: 600;
+        }
+
+        .mode {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #5b6f86;
+        }
+
+        .admin-actions {
+            margin: 15px 0 25px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--lapis-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--lapis-hover);
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-light);
+            margin: 25px 0;
+        }
+
+        ul.book-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul.book-list li {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        ul.book-list li:last-child {
+            border-bottom: none;
+        }
+
+        .book-title a {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--lapis-blue);
+            text-decoration: none;
+        }
+
+        .book-title a:hover {
+            text-decoration: underline;
+        }
+
+        .book-meta {
+            font-size: 14px;
+            color: #4a5d73;
+        }
+
+        .buy-link {
+            font-size: 14px;
+            color: var(--success-green);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .buy-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty {
+            color: #6b7c93;
+            font-style: italic;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 25px;
+            text-decoration: none;
+            font-size: 14px;
+            color: var(--lapis-blue);
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
+
+<div class="container">
     <h1>Бібліотека: Список книг</h1>
 
     {% if is_admin %}
-        <p>[Режим Адміністратора]</p>
-        <a href="{% url 'book_create' %}">Додати нову книгу</a>
+        <p class="mode">[Режим Адміністратора]</p>
+        <div class="admin-actions">
+            <a class="btn btn-primary" href="{% url 'book_create' %}">
+                ➕ Додати нову книгу
+            </a>
+        </div>
     {% else %}
-        <p>[Режим Користувача] - Оберіть книгу для детального перегляду</p>
+        <p class="mode">[Режим Користувача] — Оберіть книгу для детального перегляду</p>
     {% endif %}
 
     <hr>
-    <ul>
+
+    <ul class="book-list">
         {% for book in books %}
             <li>
-                <a href="{% url 'book_detail' book.bookid %}">
-                    <strong>{{ book.title }}</strong>
-                </a>
-                ({{ book.publicationyear }}) — {{ book.authorid.firstname }} {{ book.authorid.lastname }}
+                <div class="book-title">
+                    <a href="{% url 'book_detail' book.bookid %}">
+                        {{ book.title }}
+                    </a>
+                </div>
+
+                <div class="book-meta">
+                    {{ book.publicationyear }} —
+                    {{ book.authorid.firstname }} {{ book.authorid.lastname }}
+                </div>
+
                 {% if not is_admin %}
-                    | <a href="{% url 'buy_book' book.bookid %}" onclick="return confirm('Купити за 150 грн?')"> Купити</a>
+                    <div>
+                        <a class="buy-link"
+                           href="{% url 'buy_book' book.bookid %}"
+                           onclick="return confirm('Купити за 150 грн?')">
+                            💳 Купити
+                        </a>
+                    </div>
                 {% endif %}
             </li>
         {% empty %}
-            <li>Книг поки немає.</li>
+            <li class="empty">Книг поки немає.</li>
         {% endfor %}
     </ul>
 
-    <br>
-    <a href="{% url 'index' %}">⬅ Назад в меню</a>
+    <a class="back-link" href="{% url 'index' %}">⬅ Назад в меню</a>
+</div>
+
 </body>
 </html>

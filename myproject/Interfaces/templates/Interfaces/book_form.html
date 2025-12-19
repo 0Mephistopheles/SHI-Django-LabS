@@ -1,14 +1,115 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
+    <meta charset="UTF-8">
     <title>{{ title }}</title>
+
+    <style>
+        :root {
+            --lapis-blue: #2f6fae;
+            --lapis-hover: #245a8d;
+            --lapis-light: #eaf2fb;
+            --border-light: #d6e2f1;
+            --text-dark: #1f2d3d;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            background-color: var(--lapis-light);
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: white;
+            padding: 35px 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--lapis-blue);
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        form p {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #4a5d73;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 9px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--lapis-blue);
+        }
+
+        .actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        button {
+            background-color: var(--lapis-blue);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--lapis-hover);
+        }
+
+        .cancel-link {
+            font-size: 14px;
+            color: #5b6f86;
+            text-decoration: none;
+        }
+
+        .cancel-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
+
+<div class="container">
     <h1>{{ title }}</h1>
+
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }} <button type="submit">Зберегти</button>
+        {{ form.as_p }}
+
+        <div class="actions">
+            <button type="submit">💾 Зберегти</button>
+            <a class="cancel-link" href="{% url 'book_list' %}">Скасувати</a>
+        </div>
     </form>
-    <a href="{% url 'book_list' %}">Скасувати</a>
+</div>
+
 </body>
 </html>
