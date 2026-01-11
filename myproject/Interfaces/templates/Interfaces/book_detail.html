@@ -1,33 +1,208 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
+    <meta charset="UTF-8">
     <title>{{ book.title }}</title>
+    <style>
+        /* --- STYLES (Ті самі, що і раніше) --- */
+        :root {
+            --lapis-blue: #2f6fae;
+            --lapis-hover: #245a8d;
+            --lapis-light: #eaf2fb;
+            --border-light: #d6e2f1;
+            --text-dark: #1f2d3d;
+            --text-muted: #5b6f86;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --warning-orange: #ffc107;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            background-color: var(--lapis-light);
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 60px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            color: var(--lapis-blue);
+            text-decoration: underline;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--lapis-blue);
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .author-subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-item label {
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .info-item span {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* --- NEW STYLES FOR PURCHASE FORM --- */
+        .actions-area {
+            background-color: #f9fbfd;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+        }
+
+        .price-tag {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--lapis-blue);
+            margin-bottom: 15px;
+        }
+
+        .buy-form {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        /* Стилізація поля кількості */
+        .qty-input {
+            width: 70px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .qty-input:focus {
+            outline: none;
+            border-color: var(--lapis-blue);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover { opacity: 0.9; }
+
+        .btn-buy {
+            background-color: var(--success-green);
+            color: white;
+            flex-grow: 1; /* Кнопка займає весь доступний простір */
+        }
+
+        /* Admin styles */
+        .admin-controls { display: flex; gap: 10px; width: 100%; }
+        .btn-edit { background-color: var(--warning-orange); color: #333; flex: 1; }
+        .btn-delete { background-color: var(--danger-red); color: white; flex: 1; }
+        .admin-badge { background: #eee; color: #555; padding: 2px 6px; font-size: 11px; border-radius: 4px; margin-bottom: 10px; display: inline-block;}
+
+    </style>
 </head>
 <body>
+
+<div class="container">
+    <a href="{% url 'book_list' %}" class="back-link">⬅ Повернутися до списку</a>
+
     <h1>{{ book.title }}</h1>
-    <p><strong>ISBN:</strong> {{ book.isbn }}</p>
-    <p><strong>Рік:</strong> {{ book.publicationyear }}</p>
-    <p><strong>Жанр:</strong> {{ book.genre }}</p>
-    <p><strong>Автор:</strong> {{ book.authorid.firstname }} {{ book.authorid.lastname }}</p>
-    <p><strong>Видавець:</strong> {{ book.publisherid.name }}</p>
+    <div class="author-subtitle">
+        Автор: {{ book.authorid.firstname }} {{ book.authorid.lastname }}
+    </div>
 
-    {% if is_admin %}
-        <hr>
-        <p><em>Панель адміністратора:</em></p>
-        <a href="{% url 'book_update' book.bookid %}">✏ Редагувати</a>
-        <br><br>
+    <div class="info-grid">
+        <div class="info-item">
+            <label>Жанр</label><span>{{ book.genre }}</span>
+        </div>
+        <div class="info-item">
+            <label>Рік видання</label><span>{{ book.publicationyear }}</span>
+        </div>
+        <div class="info-item">
+            <label>ISBN</label><span>{{ book.isbn }}</span>
+        </div>
+        <div class="info-item">
+            <label>Видавництво</label><span>{{ book.publisherid.name }}</span>
+        </div>
+    </div>
 
-        <form action="{% url 'book_delete' book.bookid %}" method="post">
-            {% csrf_token %}
-            <button type="submit" onclick="return confirm('Ви впевнені?')">🗑 Видалити цю книгу</button>
-        </form>
-    {% endif %}
+    <div class="actions-area">
+        {% if is_admin %}
+            <div style="width: 100%">
+                <span class="admin-badge">Панель адміністратора</span>
+                <div class="admin-controls">
+                    <a href="{% url 'book_update' book.bookid %}" class="btn btn-edit">✏ Редагувати</a>
+                    <form action="{% url 'book_delete' book.bookid %}" method="post" style="flex: 1; margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-delete" style="width: 100%;" onclick="return confirm('Видалити?')">🗑 Видалити</button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="price-tag">Ціна за шт: 150.00 грн</div>
 
-    <hr>
-    {% if is_admin %}
-        <a href="{% url 'book_list' %}">⬅ Назад до списку (Адмін)</a>
-    {% else %}
-        <a href="{% url 'book_list' %}">⬅ Назад до списку (Купити книгу)</a>
-    {% endif %}
+             <form action="{% url 'buy_book' book.bookid %}" method="post" class="buy-form">
+                 {% csrf_token %}
+
+                 <input type="number" name="quantity" value="1" min="1" max="100" class="qty-input" aria-label="Кількість">
+
+                 <button type="submit" class="btn btn-buy">
+                     🛒 Купити
+                 </button>
+             </form>
+        {% endif %}
+    </div>
+</div>
+
 </body>
 </html>

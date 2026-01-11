@@ -6,17 +6,17 @@ urlpatterns = [
     path('', views.index_dispatch, name='index'),
 
 
-    # Адмінська частина
+
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin-stats/', views.admin_stats, name='admin_stats'),
     path('admin-stats-plotly/', views.admin_stats_plotly, name='admin_stats_plotly'),
+    path('admin-stats-concurrency/', views.admin_stats_concurrency, name='admin_stats_concurrency'),
 
-    # Користувацька частина
     path('dashboard/', views.user_dashboard, name='user_dashboard'),
     path('balance/add/', views.add_balance, name='add_balance'),
-    path('book/return/', views.return_book_view, name='return_book_view'),  # "Віддати книгу"
+    path('book/return/', views.return_book_view, name='return_book_view'),
 
-    # Існуючі шляхи (залишаємо для сумісності)
+
     path('books/', views.book_list, name='book_list'),
     path('book/<int:pk>/', views.book_detail, name='book_detail'),
     path('book/new/', views.book_form, name='book_create'),

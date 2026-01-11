@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аналіз Конкурентності</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { background-color: #f4f7f6; }
+        .dashboard-header { background: white; padding: 20px; border-bottom: 1px solid #dee2e6; margin-bottom: 30px; }
+        .chart-card { background: white; border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; height: 100%; }
+        .stat-card { border-radius: 12px; border: none; padding: 15px; text-align: center; height: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .table-custom th { background-color: #f8f9fa; border-top: none; }
+    </style>
+</head>
+<body>
+
+<header class="dashboard-header shadow-sm">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="h3 mb-0 text-danger">Stress Test: Concurrency</h1>
+            <p class="text-muted mb-0">Аналіз продуктивності бази даних при паралельних запитах</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="" class="btn btn-danger shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-repeat" viewBox="0 0 16 16">
+                  <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+                  <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3M3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9z"/>
+                </svg>
+                Запустити тест знову
+            </a>
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">← Назад</a>
+        </div>
+    </div>
+</header>
+
+<main class="container mb-5">
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card bg-light">
+                <div class="text-muted small fw-bold text-uppercase">Всього запитів</div>
+                <div class="h3 mb-0 text-primary">{{ total_requests }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card bg-light">
+                <div class="text-muted small fw-bold text-uppercase">Кількість сценаріїв</div>
+                <div class="h3 mb-0 text-dark">{{ results|length }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card bg-light">
+                <div class="text-muted small fw-bold text-uppercase">Тип запиту</div>
+                <div class="h5 mb-0 text-success" style="margin-top: 5px;">DB Analytics Aggregation</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card chart-card">
+                {{ chart|safe }}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card chart-card">
+                <h5 class="mb-3 text-secondary">Детальні метрики</h5>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Workers</th>
+                                <th class="text-end">Total Time</th>
+                                <th class="text-end">Avg/Req</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in results %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary rounded-pill">{{ row.workers }}</span>
+                                </td>
+                                <td class="text-end fw-bold">{{ row.execution_time|floatformat:3 }} s</td>
+                                <td class="text-end text-muted small">{{ row.avg_time_per_request|floatformat:4 }} s</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-auto pt-3 text-muted small fst-italic">
+                    * Workers - кількість одночасних потоків виконання.
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="text-center py-4 text-muted">
+    <small>© 2025 BookStore System Diagnostics</small>
+</footer>
+
+</body>
+</html>

@@ -161,10 +161,18 @@
                     </a>
                 </div>
 
-                <div class="book-meta">
-                    {{ book.publicationyear }} —
-                    {{ book.authorid.firstname }} {{ book.authorid.lastname }}
-                </div>
+                {% if book.authorid.firstname %}
+                    <div class="book-meta">
+
+                        {{ book.publicationyear }} —
+                        {{ book.authorid.firstname }} {{ book.authorid.lastname }}
+                    </div>
+                {% else %}
+                     <div class="book-meta">
+
+                        {{ book.publicationyear }} — невідомий автор
+                    </div>
+                {% endif %}
 
                 {% if not is_admin %}
                     <div>

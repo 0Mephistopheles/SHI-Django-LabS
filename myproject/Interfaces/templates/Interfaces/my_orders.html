@@ -1,18 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
+    <meta charset="UTF-8">
     <title>Мої замовлення</title>
+    <style>
+        :root {
+            --lapis-blue: #2f6fae;
+            --lapis-hover: #245a8d;
+            --lapis-light: #eaf2fb;
+            --border-light: #d6e2f1;
+            --text-dark: #1f2d3d;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            background-color: var(--lapis-light);
+            color: var(--text-dark);
+        }
+
+        .container {
+            /* Трохи ширший контейнер для таблиці */
+            max-width: 800px;
+            margin: 60px auto;
+            background: white;
+            padding: 35px 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--lapis-blue);
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        /* --- TABLE STYLES --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: var(--lapis-light);
+            color: var(--lapis-blue);
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid var(--border-light);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #5b6f86;
+            padding: 30px;
+            background-color: #f9fbfd;
+            border-radius: 6px;
+            border: 1px dashed var(--border-light);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #5b6f86;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            color: var(--lapis-blue);
+            text-decoration: underline;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+    </style>
 </head>
 <body>
+
+<div class="container">
+    <a href="{% url 'user_dashboard' %}" class="back-link">⬅ Назад в кабінет</a>
+
     <h1>Мої замовлення</h1>
-    <a href="{% url 'user_dashboard' %}">⬅ Назад в кабінет</a>
-    <hr>
 
     {% if orders %}
-        <table border="1" cellpadding="5">
+        <table>
             <thead>
                 <tr>
-                    <th>№ Замовлення</th>
+                    <th>№</th>
                     <th>Дата</th>
                     <th>Сума</th>
                     <th>Статус</th>
@@ -22,13 +117,17 @@
             <tbody>
                 {% for order in orders %}
                 <tr>
-                    <td>{{ order.orderid }}</td>
-                    <td>{{ order.orderdate }}</td>
-                    <td>{{ order.totalamount }} грн</td>
-                    <td>{{ order.paymentstatus }}</td>
+                    <td>#{{ order.orderid }}</td>
+                    <td>{{ order.orderdate|date:"d.m.Y H:i" }}</td>
+                    <td><strong>{{ order.totalamount }} грн</strong></td>
+                    <td>
+                        <span class="status-badge">{{ order.paymentstatus }}</span>
+                    </td>
                     <td>
                         {% for item in order.bookorderitem_set.all %}
-                            {{ item.bookid.title }} ({{ item.quantity }} шт.)<br>
+                            <div style="margin-bottom: 4px;">
+                                • {{ item.bookid.title }} <span style="color: #888;">({{ item.quantity }} шт.)</span>
+                            </div>
                         {% endfor %}
                     </td>
                 </tr>
@@ -36,7 +135,12 @@
             </tbody>
         </table>
     {% else %}
-        <p>Ви ще нічого не замовили.</p>
+        <div class="empty-message">
+            Ви ще нічого не замовили. <br>
+            <a href="{% url 'book_list' %}" style="color: var(--lapis-blue);">Перейти до каталогу</a>
+        </div>
     {% endif %}
+</div>
+
 </body>
 </html>

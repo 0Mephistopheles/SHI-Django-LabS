@@ -1,18 +1,138 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
+    <meta charset="UTF-8">
     <title>Віддати книгу</title>
+    <style>
+        /* Використовуємо ті самі змінні та стилі, що і в book_form.html
+           для збереження єдиного дизайну.
+        */
+        :root {
+            --lapis-blue: #2f6fae;
+            --lapis-hover: #245a8d;
+            --lapis-light: #eaf2fb;
+            --border-light: #d6e2f1;
+            --text-dark: #1f2d3d;
+            --success-green: #28a745; /* Додав колір для акценту на грошах */
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            background-color: var(--lapis-light);
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: white;
+            padding: 35px 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--lapis-blue);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        /* Стиль для інформаційного повідомлення */
+        .info-message {
+            background-color: #f0fff4;
+            border-left: 4px solid var(--success-green);
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            color: #2e5c38;
+            font-size: 15px;
+        }
+
+        .info-message strong {
+            color: var(--success-green);
+        }
+
+        form p {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #4a5d73;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 9px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--lapis-blue);
+        }
+
+        .actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        button {
+            background-color: var(--lapis-blue);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--lapis-hover);
+        }
+
+        .cancel-link {
+            font-size: 14px;
+            color: #5b6f86;
+            text-decoration: none;
+        }
+
+        .cancel-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
+
+<div class="container">
     <h1>Віддати книгу до бібліотеки</h1>
-    <p>Заповніть дані про книгу. Після успішного додавання ви отримаєте 200 грн.</p>
+
+    <div class="info-message">
+        Заповніть дані про книгу. Після успішного додавання ви отримаєте <strong>+200 грн</strong> на баланс!
+    </div>
 
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Віддати книгу</button>
-    </form>
 
-    <a href="{% url 'user_dashboard' %}">Скасувати</a>
+        {{ form.as_p }}
+
+        <div class="actions">
+            <button type="submit">📚 Віддати книгу</button>
+            <a class="cancel-link" href="{% url 'user_dashboard' %}">Скасувати</a>
+        </div>
+    </form>
+</div>
+
 </body>
 </html>

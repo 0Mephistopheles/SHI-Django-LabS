@@ -13,6 +13,8 @@
         .chart-card:hover { transform: translateY(-5px); }
         .filter-section { border-top: 1px solid #eee; padding-top: 15px; margin-top: auto; background: #fafafa; border-radius: 0 0 15px 15px; }
         .form-label { font-size: 0.85rem; font-weight: 600; color: #666; }
+        /* Стиль для синхронізованих полів */
+        .sync-input { width: 80px; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -32,31 +34,32 @@
 
 <main class="container mb-5">
     <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #e3f2fd;">
-            <div class="text-muted small fw-bold text-uppercase">Сер. дохід / місяць</div>
-            <div class="h4 mb-0 text-primary">{{ stats.avg_monthly_revenue }} грн</div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #e3f2fd;">
+                <div class="text-muted small fw-bold text-uppercase">Сер. дохід / місяць</div>
+                <div class="h4 mb-0 text-primary">{{ stats.avg_monthly_revenue }} грн</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #f1f8e9;">
+                <div class="text-muted small fw-bold text-uppercase">Медіана витрат клієнта</div>
+                <div class="h4 mb-0 text-success">{{ stats.median_customer_spend }} грн</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #fff3e0;">
+                <div class="text-muted small fw-bold text-uppercase">Рекорд книг у автора</div>
+                <div class="h4 mb-0 text-warning">{{ stats.max_books_by_author }} од.</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #ffeeb2;">
+                <div class="text-muted small fw-bold text-uppercase">Складів у дефіциті</div>
+                <div class="h4 mb-0 text-danger">{{ stats.deficit_warehouses_count }}</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #f1f8e9;">
-            <div class="text-muted small fw-bold text-uppercase">Медіана витрат клієнта</div>
-            <div class="h4 mb-0 text-success">{{ stats.median_customer_spend }} грн</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #fff3e0;">
-            <div class="text-muted small fw-bold text-uppercase">Рекорд книг у автора</div>
-            <div class="h4 mb-0 text-warning">{{ stats.max_books_by_author }} од.</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card shadow-sm border-0 p-3 text-center h-100" style="border-radius: 12px; background: #ffeeb2;">
-            <div class="text-muted small fw-bold text-uppercase">Складів у дефіциті</div>
-            <div class="h4 mb-0 text-danger">{{ stats.deficit_warehouses_count }}</div>
-        </div>
-    </div>
-    </div>
+
     <form method="GET" id="analyticsForm">
         <div class="row g-4">
 
@@ -66,15 +69,27 @@
                         {% if charts.author_chart %}{{ charts.author_chart|safe }}{% else %}<div class="alert alert-light text-center">Немає даних</div>{% endif %}
                     </div>
                     <div class="filter-section p-3">
-                        <div class="row g-2">
-                            <div class="col-7">
-                                <label class="form-label">Пошук автора:</label>
-                                <input type="text" name="author_query" class="form-control form-control-sm" placeholder="Прізвище..." value="{{ filters.author_query }}" onchange="this.form.submit()">
-                            </div>
-                            <div class="col-5">
-                                <label class="form-label">Мін. книг:</label>
-                                <input type="number" name="min_books" class="form-control form-control-sm" value="{{ filters.min_books }}" onchange="this.form.submit()">
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label">Пошук автора:</label>
+                            <input type="text" name="author_query" class="form-control form-control-sm" placeholder="Прізвище..." value="{{ filters.author_query }}" onchange="this.form.submit()">
+                        </div>
+
+                        <label class="form-label">Мінімальна кількість книг:</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="range" class="form-range"
+                                   id="range_min_books"
+                                   min="0" max="50" step="1"
+                                   value="{{ filters.min_books|default:0 }}"
+                                   oninput="syncValues('range_min_books', 'input_min_books')"
+                                   onchange="this.form.submit()">
+
+                            <input type="number" class="form-control form-control-sm sync-input"
+                                   id="input_min_books"
+                                   name="min_books"
+                                   min="0" max="50"
+                                   value="{{ filters.min_books|default:0 }}"
+                                   oninput="syncValues('input_min_books', 'range_min_books')"
+                                   onchange="this.form.submit()">
                         </div>
                     </div>
                 </div>
@@ -88,9 +103,10 @@
                     <div class="filter-section p-3">
                         <label class="form-label">Обмежити кількість жанрів:</label>
                         <select name="top_genres" class="form-select form-select-sm" onchange="this.form.submit()">
-                            <option value="3" {% if filters.top_genres == "3" %}selected{% endif %}>Топ 3 жанри</option>
-                            <option value="5" {% if filters.top_genres == "5" %}selected{% endif %}>Топ 5 жанрів</option>
-                            <option value="10" {% if filters.top_genres == "10" %}selected{% endif %}>Всі жанри</option>
+                            <option value="" {% if not filters.top_genres %}selected{% endif %}>Всі жанри</option>
+                            <option value="3" {% if filters.top_genres == 3 %}selected{% endif %}>Топ 3 жанри</option>
+                            <option value="5" {% if filters.top_genres == 5 %}selected{% endif %}>Топ 5 жанрів</option>
+                            <option value="10" {% if filters.top_genres == 10 %}selected{% endif %}>Топ 10 жанрів</option>
                         </select>
                     </div>
                 </div>
@@ -122,8 +138,23 @@
                         {% if charts.customer_chart %}{{ charts.customer_chart|safe }}{% else %}<div class="alert alert-light text-center">Немає даних</div>{% endif %}
                     </div>
                     <div class="filter-section p-3">
-                        <label class="form-label">Мінімальна сума покупок: <strong>{{ filters.min_spent }} грн</strong></label>
-                        <input type="range" name="min_spent" class="form-range" min="0" max="5000" step="100" value="{{ filters.min_spent }}" onchange="this.form.submit()">
+                        <label class="form-label">Мінімальна сума покупок (грн):</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="range" class="form-range"
+                                   id="range_min_spent"
+                                   min="0" max="10000" step="100"
+                                   value="{{ filters.min_spent|default:0 }}"
+                                   oninput="syncValues('range_min_spent', 'input_min_spent')"
+                                   onchange="this.form.submit()">
+
+                            <input type="number" class="form-control form-control-sm sync-input"
+                                   id="input_min_spent"
+                                   name="min_spent"
+                                   min="0" max="10000" step="100"
+                                   value="{{ filters.min_spent|default:0 }}"
+                                   oninput="syncValues('input_min_spent', 'range_min_spent')"
+                                   onchange="this.form.submit()">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -145,10 +176,23 @@
                         {% if charts.stock_chart %}{{ charts.stock_chart|safe }}{% else %}<div class="alert alert-success text-center">Дефіциту не виявлено</div>{% endif %}
                     </div>
                     <div class="filter-section p-3 bg-light">
-                        <label class="form-label text-danger">Встановити поріг дефіциту: <span class="badge bg-danger" id="stockLabel">{{ filters.threshold }}</span></label>
-                        <input type="range" name="threshold" class="form-range" min="10" max="1000" step="10" value="{{ filters.threshold }}"
-                               oninput="document.getElementById('stockLabel').innerText = this.value"
-                               onchange="this.form.submit()">
+                        <label class="form-label text-danger">Поріг дефіциту (книг на складі):</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="range" class="form-range"
+                                   id="range_threshold"
+                                   min="10" max="20000" step="10"
+                                   value="{{ filters.threshold|default:100 }}"
+                                   oninput="syncValues('range_threshold', 'input_threshold')"
+                                   onchange="this.form.submit()">
+
+                            <input type="number" class="form-control form-control-sm sync-input border-danger text-danger"
+                                   id="input_threshold"
+                                   name="threshold"
+                                   min="10" max="1000"
+                                   value="{{ filters.threshold|default:100 }}"
+                                   oninput="syncValues('input_threshold', 'range_threshold')"
+                                   onchange="this.form.submit()">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -160,6 +204,22 @@
 <footer class="text-center py-4 text-muted">
     <small>© 2025 BookStore Analytics System (Enhanced Interactive UI)</small>
 </footer>
+
+<script>
+    /**
+     * Ця функція миттєво оновлює сусіднє поле, коли ви рухаєте повзунок або пишете число.
+     * @param {string} sourceId - ID елемента, який ви змінюєте
+     * @param {string} targetId - ID елемента, який треба оновити
+     */
+    function syncValues(sourceId, targetId) {
+        const source = document.getElementById(sourceId);
+        const target = document.getElementById(targetId);
+
+        if (source && target) {
+            target.value = source.value;
+        }
+    }
+</script>
 
 </body>
 </html>

@@ -1,38 +1,168 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
-    <title>Загальна сторінка</title>
+    <meta charset="UTF-8">
+    <title>Особистий кабінет</title>
+    <style>
+        /* --- COPY OF COMMON STYLES --- */
+        :root {
+            --lapis-blue: #2f6fae;
+            --lapis-hover: #245a8d;
+            --lapis-light: #eaf2fb;
+            --border-light: #d6e2f1;
+            --text-dark: #1f2d3d;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            background-color: var(--lapis-light);
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: white;
+            padding: 35px 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--lapis-blue);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #5b6f86;
+            margin-bottom: 25px;
+            font-size: 16px;
+        }
+
+        /* --- DASHBOARD SPECIFIC --- */
+        .balance-card {
+            background-color: var(--lapis-light);
+            border: 1px solid var(--border-light);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .balance-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--lapis-blue);
+        }
+
+        .menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu-list li {
+            margin-bottom: 12px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .menu-link:hover {
+            border-color: var(--lapis-blue);
+            background-color: #f8fbff;
+            color: var(--lapis-blue);
+        }
+
+        .menu-link.add-funds {
+            border-color: var(--success-green);
+            color: #155724;
+        }
+
+        .menu-link.add-funds:hover {
+             background-color: #f0fff4;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid var(--border-light);
+            margin: 25px 0;
+        }
+
+        .logout-btn {
+            background-color: transparent;
+            color: var(--danger-red);
+            border: 1px solid var(--danger-red);
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .logout-btn:hover {
+            background-color: #fff5f5;
+        }
+    </style>
 </head>
 <body>
-    <h1>Загальна сторінка користувача: {{ user.username }}</h1>
 
-    <h3>Ваш баланс: {{ balance }} грн.</h3>
+<div class="container">
+    <h1>Вітаємо, {{ user.username }}!</h1>
+    <div class="subtitle">Особистий кабінет читача</div>
 
-    <ul>
+    <div class="balance-card">
+        <div>
+            <div style="font-size: 13px; color: #5b6f86;">Ваш баланс:</div>
+            <div class="balance-amount">{{ balance }} грн</div>
+        </div>
+        <a href="{% url 'add_balance' %}" class="menu-link add-funds" style="padding: 8px 15px; font-size: 13px;">
+            + Поповнити
+        </a>
+    </div>
+
+    <ul class="menu-list">
         <li>
-            <a href="{% url 'add_balance' %}">Поповнити баланс (+100 грн)</a>
+            <a href="{% url 'book_list' %}" class="menu-link">
+                📚 Купити книгу (Каталог)
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'my_orders' %}" class="menu-link">
+                📦 Мої замовлення (Історія)
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'return_book_view' %}" class="menu-link">
+                🔄 Віддати книгу (+200 грн)
+            </a>
         </li>
     </ul>
 
     <hr>
 
-    <ul>
-        <li>
-            <a href="{% url 'book_list' %}">Купити книгу (Список всіх книг)</a>
-        </li>
-        <li>
-            <a href="{% url 'my_orders' %}">Переглянути свої замовлення (Історія)</a>
-        </li>
-        <li>
-            <a href="{% url 'return_book_view' %}">Віддати свою книгу (+200 грн до балансу)</a>
-        </li>
-    </ul>
-    <hr>
-
-    <hr>
     <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
-        <button type="submit">Вийти з акаунту</button>
+        <button type="submit" class="logout-btn">🚪 Вийти з акаунту</button>
     </form>
+</div>
+
 </body>
 </html>

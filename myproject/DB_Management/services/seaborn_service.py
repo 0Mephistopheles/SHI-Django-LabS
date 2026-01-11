@@ -1,53 +1,82 @@
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 import base64
-import pandas as pd
+import matplotlib
+
+# Встановлюємо бекенд 'Agg', щоб графіки генерувалися без вікон GUI (важливо для сервера)
+matplotlib.use('Agg')
+
 
 class SeabornVisualizationService:
     def __init__(self):
-        sns.set_theme(style="whitegrid")
-        self.palette = "viridis"
+        self.style = "whitegrid"
+        sns.set_style(self.style)
 
-    def _get_base64_image(self):
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png', bbox_inches='tight', dpi=100)
-        buf.seek(0)
-        img_str = base64.b64encode(buf.read()).decode('utf-8')
-        plt.close()
-        return img_str
+    def _get_image(self) -> str:
+        """Допоміжний метод: конвертує графік у base64 рядок"""
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', bbox_inches='tight')
+        buffer.seek(0)
+        image_png = buffer.getvalue()
+        buffer.close()
+        plt.close()  # Обов'язково закриваємо, щоб звільнити пам'ять
 
-    def generate_bar(self, df, x, y, title="", color=None):
+        graphic = base64.b64encode(image_png)
+        return graphic.decode('utf-8')
+
+    def generate_author_chart(self, df) -> str:
         if df.empty: return None
-        plt.figure(figsize=(8, 5))
-        # Використовуємо палітру тільки якщо color не є заголовком
-        sns.barplot(data=df, x=x, y=y, palette=color or self.palette)
-        plt.title(title, fontsize=12)
-        return self._get_base64_image()
+        plt.figure(figsize=(10, 6))
+        sns.barplot(x='books_count', y='full_name', data=df, palette='viridis')
+        plt.title('Топ авторів')
+        plt.xlabel('Кількість книг')
+        plt.ylabel('Автор')
+        return self._get_image()
 
-    def generate_pie(self, df, values, labels, title=""):
+    def generate_genre_chart(self, df) -> str:
         if df.empty: return None
-        plt.figure(figsize=(6, 6))
-        plt.pie(df[values], labels=df[labels], autopct='%1.1f%%', colors=sns.color_palette("pastel"))
-        plt.title(title, fontsize=12)
-        return self._get_base64_image()
+        plt.figure(figsize=(8, 8))
+        # Використовуємо values та index, бо df згрупований
+        plt.pie(df['total_sold'], labels=df['genre'], autopct='%1.1f%%', startangle=140)
+        plt.title('Популярність жанрів')
+        return self._get_image()
 
-    def generate_line(self, df, x, y, title=""):
+    def generate_sales_chart(self, df) -> str:
         if df.empty: return None
-        plt.figure(figsize=(10, 4))
-        sns.lineplot(data=df, x=x, y=y, marker='o', color='#2ecc71', linewidth=2.5)
-        plt.title(title, fontsize=12)
+        plt.figure(figsize=(10, 6))
+        sns.lineplot(x='month_str', y='total_revenue', data=df, marker='o', linewidth=2.5, color='#2ecc71')
+        plt.title('Динаміка продажів')
+        plt.xlabel('Місяць')
+        plt.ylabel('Дохід (грн)')
         plt.xticks(rotation=45)
-        return self._get_base64_image()
+        return self._get_image()
 
-    def generate_performance_chart(self, df, title="Аналіз продуктивності запитів"):
+    def generate_customer_chart(self, df) -> str:
         if df.empty: return None
-        plt.figure(figsize=(10, 5))
-        sns.lineplot(data=df, x='workers', y='execution_time', marker='o', color='red', linewidth=2)
-        plt.title(title, fontsize=14)
-        plt.xlabel('Кількість потоків (Threads)')
-        plt.ylabel('Загальний час виконання (секунди)')
-        plt.grid(True, linestyle='--', alpha=0.7)
-        return self._get_base64_image()
+        plt.figure(figsize=(10, 6))
+        sns.barplot(x='total_spent', y='name', data=df.head(10), palette='Blues_d')
+        plt.title('Топ клієнтів')
+        plt.xlabel('Витрачено (грн)')
+        plt.ylabel('Клієнт')
+        return self._get_image()
+
+    def generate_stock_chart(self, df) -> str:
+        if df.empty: return None
+        plt.figure(figsize=(10, 6))
+        sns.barplot(x='total_books', y='location', data=df, palette='Reds_d')
+        plt.title('Склади з дефіцитом')
+        plt.xlabel('Залишок книг')
+        plt.ylabel('Склад')
+        return self._get_image()
+
+
+    def generate_publisher_chart(self, df) -> str:
+        if df.empty: return None
+        plt.figure(figsize=(10, 6))
+        # Беремо топ-15, щоб графік не був перевантажений
+        sns.barplot(x='books_published', y='name', data=df.head(15), palette='magma')
+        plt.title('Книги за видавництвами')
+        plt.xlabel('Кількість виданих книг')
+        plt.ylabel('Видавництво')
+        return self._get_image()

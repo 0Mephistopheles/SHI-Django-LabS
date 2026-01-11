@@ -6,137 +6,125 @@ from .forms import BookForm
 from DB_Management.models import UserProfile, Customer, Bookorder, Bookorderitem
 from django.utils import timezone
 
+from DB_Management.services.concurrency_service import ConcurrencyService
 from DB_Management.services.plotly_service import PlotlyVisualizationService
 from django.core.cache import cache
 from django.shortcuts import render
 from DB_Management.repositories.unit_of_work import UnitOfWork
+from DB_Management.services.dataframe_service import AnalyticsDataFrameService
+from DB_Management.services.plotly_service import PlotlyVisualizationService
 from DB_Management.services.seaborn_service import SeabornVisualizationService
-from DB_Management.services.concurrency_service import ConcurrencyService
-import pandas as pd
 
 
-@login_required
+def get_analytics_filters(request):
+    """
+    Отримує параметри безпечно. Не скидає все, якщо один параметр битий.
+    """
+    filters = {}
+
+    # Helper для безпечного int
+    def get_int(key, default):
+        try:
+            val = request.GET.get(key)
+            return int(val) if val is not None and val != '' else default
+        except (ValueError, TypeError):
+            return default
+
+    # Helper для безпечного float
+    def get_float(key, default):
+        try:
+            val = request.GET.get(key)
+            return float(val) if val is not None and val != '' else default
+        except (ValueError, TypeError):
+            return default
+
+    filters['threshold'] = get_int('threshold', 100)
+    filters['min_books'] = get_int('min_books', 0)
+    filters['min_spent'] = get_float('min_spent', 0.0)
+
+    # Top Genres може бути None
+    top_genres = request.GET.get('top_genres')
+    if top_genres and top_genres.isdigit():
+        filters['top_genres'] = int(top_genres)
+    else:
+        filters['top_genres'] = None  # None означає "всі"
+
+    filters['author_query'] = request.GET.get('author_query', '').strip()
+
+    # Дати залишаємо рядками, сервіс/ORM розбереться
+    filters['start_date'] = request.GET.get('start_date') or None
+    filters['end_date'] = request.GET.get('end_date') or None
+
+    # DEBUG: Виводимо в консоль, щоб ви бачили, що приходить
+    print(f"DEBUG FILTERS: {filters}")
+
+    return filters
+
 def admin_stats_plotly(request):
-    if not request.user.is_superuser:
-        return redirect('index')
+    if not request.user.is_superuser: return redirect('index')
 
-    # 1. Отримання параметрів фільтрації
-    threshold = int(request.GET.get('threshold', 100))
-    author_query = request.GET.get('author_query', '').strip()
-    min_books = int(request.GET.get('min_books', 1))
-    min_spent = float(request.GET.get('min_spent', 0))
-    top_genres = request.GET.get('top_genres', 10)
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-
-    # 2. Перевірка кешу
-    cache_key = f"plotly_{threshold}_{author_query}_{min_books}_{min_spent}_{top_genres}_{start_date}_{end_date}"
+    filters = get_analytics_filters(request)
+    # Змінюємо ключ кешу, щоб скинути старе
+    cache_key = f"plotly_unified_v12_{filters}"
     cached_payload = cache.get(cache_key)
 
     if not cached_payload:
-        uow = UnitOfWork()
+        # 1. Отримуємо дані (Єдине джерело правди)
+        data_service = AnalyticsDataFrameService()
+        dfs = data_service.get_filtered_data(filters)
+        stats = data_service.get_stats_kpi(dfs)
+
+        # 2. Малюємо (Plotly)
         viz = PlotlyVisualizationService()
-        charts = {}
+        charts = {
+            'author_chart': viz.generate_author_bar(dfs['authors']),
+            'genre_chart': viz.generate_genre_pie(dfs['genres']),
+            'sales_chart': viz.generate_sales_line(dfs['sales']),
+            'customer_chart': viz.generate_customer_bar(dfs['customers']),
+            'publisher_chart': viz.generate_publisher_bar(dfs['publishers']),
+            'stock_chart': viz.generate_stock_bar(dfs['stock']),
 
-        # Отримання даних через репозиторій
-        df_authors = pd.DataFrame(list(uow.analytics.get_books_count_by_author(author_query, min_books)))
-        df_genres = pd.DataFrame(list(uow.analytics.get_popularity_by_genre(top_genres)))
-        df_sales = pd.DataFrame(list(uow.analytics.get_monthly_sales_dynamics(start_date, end_date)))
-        df_customers = pd.DataFrame(list(uow.analytics.get_total_spent_by_customer(min_spent)))
-        df_publishers = pd.DataFrame(list(uow.analytics.get_publisher_book_stats()))
-        df_stock = pd.DataFrame(list(uow.analytics.get_low_stock_warehouses(threshold)))
-
-        # Генерація інтерактивних графіків
-        charts['author_chart'] = viz.generate_author_bar(df_authors)
-        charts['genre_chart'] = viz.generate_genre_pie(df_genres)
-        charts['sales_chart'] = viz.generate_sales_line(df_sales)
-        charts['customer_chart'] = viz.generate_customer_bar(df_customers)
-        charts['publisher_chart'] = viz.generate_publisher_bar(df_publishers)
-        charts['stock_chart'] = viz.generate_stock_bar(df_stock)
-
-        # 3. РОЗРАХУНОК СТАТИСТИКИ PANDAS
-        stats = {
-            'avg_monthly_revenue': round(df_sales['total_revenue'].mean(), 2) if not df_sales.empty else 0,
-            'median_customer_spend': round(df_customers['total_spent'].median(), 2) if not df_customers.empty else 0,
-            'max_books_by_author': df_authors['books_count'].max() if not df_authors.empty else 0,
-            'deficit_warehouses_count': len(df_stock)
         }
-
         cached_payload = {'charts': charts, 'stats': stats}
-        cache.set(cache_key, cached_payload, 300)
+        cache.set(cache_key, cached_payload, 30)
 
-    context = {
+    return render(request, 'Interfaces/admin_stats_plotly.html', {
         'charts': cached_payload['charts'],
         'stats': cached_payload['stats'],
-        'filters': {
-            'threshold': threshold, 'author_query': author_query,
-            'min_books': min_books, 'min_spent': min_spent,
-            'top_genres': top_genres, 'start_date': start_date, 'end_date': end_date
-        }
-    }
-    return render(request, 'Interfaces/admin_stats_plotly.html', context)
-
-
+        'filters': filters
+    })
 
 @login_required
 def admin_stats(request):
-    if not request.user.is_superuser:
-        return redirect('index')
+    if not request.user.is_superuser: return redirect('index')
 
-    threshold = int(request.GET.get('threshold', 100))
-    author_query = request.GET.get('author_query', '').strip()
+    filters = get_analytics_filters(request)
+    cache_key = f"seaborn_unified_v12_{filters}"
+    cached_payload = cache.get(cache_key)
 
-    cache_key = f"seaborn_v3_{threshold}_{author_query}"
-    cache_data = cache.get(cache_key)
+    if not cached_payload:
+        # 1. Отримуємо ТІ Ж САМІ дані
+        data_service = AnalyticsDataFrameService()
+        dfs = data_service.get_filtered_data(filters)
+        stats = data_service.get_stats_kpi(dfs)
 
-    if not cache_data:
-        uow = UnitOfWork()
+        # 2. Малюємо (Seaborn)
         viz = SeabornVisualizationService()
-        conc_service = ConcurrencyService()
-        charts = {}
-
-        df_authors = pd.DataFrame(list(uow.analytics.get_books_count_by_author(author_query)))
-        df_genres = pd.DataFrame(list(uow.analytics.get_popularity_by_genre()))
-        df_sales = pd.DataFrame(list(uow.analytics.get_monthly_sales_dynamics()))
-        df_customers = pd.DataFrame(list(uow.analytics.get_total_spent_by_customer()))
-        df_stock = pd.DataFrame(list(uow.analytics.get_low_stock_warehouses(threshold)))
-
-        if not df_authors.empty:
-            df_authors['full_name'] = df_authors['firstname'] + ' ' + df_authors['lastname']
-            charts['author_chart'] = viz.generate_bar(df_authors, x='books_count', y='full_name', title='Автори')
-
-        charts['genre_chart'] = viz.generate_pie(df_genres, values='total_sold', labels='genre', title='Жанри')
-
-        if not df_sales.empty:
-            df_sales['month_str'] = df_sales['month'].dt.strftime('%b %Y')
-            charts['sales_chart'] = viz.generate_line(df_sales, x='month_str', y='total_revenue', title='Продажі')
-
-        if not df_customers.empty:
-            df_customers['name'] = df_customers['customerid__firstname'] + ' ' + df_customers['customerid__lastname']
-            charts['customer_chart'] = viz.generate_bar(df_customers, x='total_spent', y='name', title='Клієнти',
-                                                        color="magma")
-
-        charts['stock_chart'] = viz.generate_bar(df_stock, x='total_books', y='location', title='Дефіцит',
-                                                 color="Reds_r")
-
-        stats = {
-            'avg_monthly_revenue': round(df_sales['total_revenue'].mean(), 2) if not df_sales.empty else 0,
-            'median_customer_spend': round(df_customers['total_spent'].median(), 2) if not df_customers.empty else 0,
-            'max_books_by_author': df_authors['books_count'].max() if not df_authors.empty else 0,
-            'deficit_warehouses_count': len(df_stock)
+        charts = {
+            'author_chart': viz.generate_author_chart(dfs['authors']),
+            'genre_chart': viz.generate_genre_chart(dfs['genres']),
+            'sales_chart': viz.generate_sales_chart(dfs['sales']),
+            'customer_chart': viz.generate_customer_chart(dfs['customers']),
+            'stock_chart': viz.generate_stock_chart(dfs['stock']),
+            'publisher_chart': viz.generate_publisher_chart(dfs['publishers'])
         }
-
-        performance_data = conc_service.run_experiment(total_requests=150)
-        df_perf = pd.DataFrame(performance_data)
-        charts['performance_chart'] = viz.generate_performance_chart(df_perf)
-
-        cache_data = {'charts': charts, 'stats': stats}
-        cache.set(cache_key, cache_data, 60)
+        cached_payload = {'charts': charts, 'stats': stats}
+        cache.set(cache_key, cached_payload, 30)
 
     return render(request, 'Interfaces/admin_stats.html', {
-        'charts': cache_data['charts'],
-        'stats': cache_data['stats'],
-        'filters': {'threshold': threshold, 'author_query': author_query}
+        'charts': cached_payload['charts'],
+        'stats': cached_payload['stats'],
+        'filters': filters
     })
 
 @login_required
@@ -282,18 +270,34 @@ def book_delete(request, pk):
 
 @login_required
 def buy_book(request, pk):
+    if request.method != 'POST':
+        return redirect('book_detail', pk=pk)
+
     uow = UnitOfWork()
     book = uow.books.get_by_id(pk)
     if not book:
         raise Http404("Книгу не знайдено")
 
-    price = 150.00
+    # Отримуємо кількість з форми (за замовчуванням 1)
+    try:
+        quantity = int(request.POST.get('quantity', 1))
+        if quantity < 1:
+            quantity = 1
+    except ValueError:
+        quantity = 1
+
+    unit_price = 150.00
+    total_price = unit_price * quantity
 
     profile = request.user.userprofile
 
-    if profile.balance < price:
-        return render(request, 'Interfaces/order_error.html', {'message': 'Недостатньо коштів на балансі!'})
+    # Перевіряємо баланс на повну суму
+    if profile.balance < total_price:
+        return render(request, 'Interfaces/order_error.html', {
+            'message': f'Недостатньо коштів! Потрібно {total_price} грн, а у вас {profile.balance} грн.'
+        })
 
+    # Логіка створення клієнта (якщо немає)
     customer = Customer.objects.filter(email=request.user.email).first()
     if not customer:
         customer = Customer.objects.create(
@@ -304,24 +308,26 @@ def buy_book(request, pk):
             address=""
         )
 
-
     with uow:
+        # Створюємо замовлення
         order_data = {
             'customerid': customer,
             'orderdate': timezone.now(),
-            'totalamount': price,
+            'totalamount': total_price, # Записуємо загальну суму
             'paymentstatus': 'Paid'
         }
         order = uow.orders.create(order_data)
 
+        # Створюємо деталі замовлення з кількістю
         Bookorderitem.objects.create(
             orderid=order,
             bookid=book,
-            quantity=1,
-            unitprice=price
+            quantity=quantity, # <--- Важливо: записуємо обрану кількість
+            unitprice=unit_price
         )
 
-        profile.balance = float(profile.balance) - price
+        # Знімаємо гроші
+        profile.balance = float(profile.balance) - total_price
         profile.save()
 
     return redirect('my_orders')
@@ -336,3 +342,24 @@ def my_orders(request):
 
     return render(request, 'Interfaces/my_orders.html', {'orders': orders})
 
+
+@login_required
+def admin_stats_concurrency(request):
+
+    if not request.user.is_superuser:
+        return redirect('index')
+
+    service = ConcurrencyService()
+
+    total_requests = int(request.GET.get('requests', 150))
+    results = service.run_experiment(total_requests=total_requests)
+
+    # Генеруємо графік
+    viz = PlotlyVisualizationService()
+    chart = viz.generate_concurrency_chart(results)
+
+    return render(request, 'Interfaces/admin_stats_concurrency.html', {
+        'chart': chart,
+        'results': results,
+        'total_requests': total_requests
+    })
