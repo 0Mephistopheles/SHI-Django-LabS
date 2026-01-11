@@ -10,7 +10,9 @@ urlpatterns = [
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin-stats/', views.admin_stats, name='admin_stats'),
     path('admin-stats-plotly/', views.admin_stats_plotly, name='admin_stats_plotly'),
+    path('admin-stats-bokeh/', views.admin_stats_bokeh, name='admin_stats_bokeh'),
     path('admin-stats-concurrency/', views.admin_stats_concurrency, name='admin_stats_concurrency'),
+
 
     path('dashboard/', views.user_dashboard, name='user_dashboard'),
     path('balance/add/', views.add_balance, name='add_balance'),

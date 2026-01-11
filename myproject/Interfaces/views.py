@@ -14,6 +14,7 @@ from DB_Management.repositories.unit_of_work import UnitOfWork
 from DB_Management.services.dataframe_service import AnalyticsDataFrameService
 from DB_Management.services.plotly_service import PlotlyVisualizationService
 from DB_Management.services.seaborn_service import SeabornVisualizationService
+from DB_Management.services.bokeh_service import BokehVisualizationService
 
 
 def get_analytics_filters(request):
@@ -59,6 +60,39 @@ def get_analytics_filters(request):
     print(f"DEBUG FILTERS: {filters}")
 
     return filters
+
+@login_required
+def admin_stats_bokeh(request):
+    if not request.user.is_superuser: return redirect('index')
+
+    filters = get_analytics_filters(request)
+    cache_key = f"bokeh_unified_v12_{filters}"
+    cached_payload = cache.get(cache_key)
+
+    if not cached_payload:
+        # 1. Отримуємо дані
+        data_service = AnalyticsDataFrameService()
+        dfs = data_service.get_filtered_data(filters)
+        stats = data_service.get_stats_kpi(dfs)
+
+        # 2. Малюємо (Bokeh)
+        viz = BokehVisualizationService()
+        charts = {
+            'author_chart': viz.generate_author_bar(dfs['authors']),
+            'genre_chart': viz.generate_genre_pie(dfs['genres']),
+            'sales_chart': viz.generate_sales_line(dfs['sales']),
+            'customer_chart': viz.generate_customer_bar(dfs['customers']),
+            'publisher_chart': viz.generate_publisher_bar(dfs['publishers']),
+            'stock_chart': viz.generate_stock_bar(dfs['stock']),
+        }
+        cached_payload = {'charts': charts, 'stats': stats}
+        cache.set(cache_key, cached_payload, 30)
+
+    return render(request, 'Interfaces/admin_stats_bokeh.html', {
+        'charts': cached_payload['charts'],
+        'stats': cached_payload['stats'],
+        'filters': filters
+    })
 
 def admin_stats_plotly(request):
     if not request.user.is_superuser: return redirect('index')
