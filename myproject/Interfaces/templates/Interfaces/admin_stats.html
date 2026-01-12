@@ -211,13 +211,13 @@
                     <div class="filter-section p-3 bg-light">
                         <label class="form-label text-danger">Поріг дефіциту (книг на складі):</label>
                         <div class="d-flex align-items-center gap-2">
-                            <input type="range" class="form-range" id="range_threshold" min="10" max="1000" step="10"
+                            <input type="range" class="form-range" id="range_threshold" min="10" max="20000" step="10"
                                    value="{{ filters.threshold|default:100 }}"
                                    oninput="syncValues('range_threshold', 'input_threshold')"
                                    onchange="this.form.submit()">
                             <input type="number" class="form-control form-control-sm sync-input border-danger text-danger"
                                    id="input_threshold" name="threshold"
-                                   min="10" max="1000" value="{{ filters.threshold|default:100 }}"
+                                   min="10" max=20000" value="{{ filters.threshold|default:100 }}"
                                    oninput="syncValues('input_threshold', 'range_threshold')"
                                    onchange="this.form.submit()">
                         </div>

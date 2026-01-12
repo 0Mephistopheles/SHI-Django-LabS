@@ -112,7 +112,8 @@
 
     <nav>
         <ul>
-           <!-- <li><a href="{% url 'admin_stats_plotly' %}">Статистика (Plotly)</a></li> -->
+            <li><a href="{% url 'admin_stats' %}">Статистика (Seaborn)</a></li>
+            <li><a href="{% url 'admin_stats_plotly' %}">Статистика (Plotly)</a></li>
             <li><a href="{% url 'admin_stats_bokeh' %}">Статистика (Bokeh)</a></li>
             <li><a href="{% url 'admin_stats_concurrency' %}">Тест Багатопоточності</a></li>
             <li><a href="{% url 'book_list' %}">Всі книги</a></li>
@@ -124,7 +125,7 @@
 
     <div class="content">
         {% block content %}
-       <!--  <p>Виберіть дію в меню вище.</p> -->
+       <!--     <p>Виберіть дію в меню вище.</p> -->
         {% endblock %}
     </div>
 
