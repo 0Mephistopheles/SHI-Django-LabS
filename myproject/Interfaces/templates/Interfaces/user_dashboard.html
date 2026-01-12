@@ -141,17 +141,17 @@
     <ul class="menu-list">
         <li>
             <a href="{% url 'book_list' %}" class="menu-link">
-                📚 Купити книгу (Каталог)
+                 Купити книгу (Каталог)
             </a>
         </li>
         <li>
             <a href="{% url 'my_orders' %}" class="menu-link">
-                📦 Мої замовлення (Історія)
+                 Мої замовлення (Історія)
             </a>
         </li>
         <li>
             <a href="{% url 'return_book_view' %}" class="menu-link">
-                🔄 Віддати книгу (+200 грн)
+                 Віддати книгу (+200 грн)
             </a>
         </li>
     </ul>
@@ -160,7 +160,7 @@
 
     <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
-        <button type="submit" class="logout-btn">🚪 Вийти з акаунту</button>
+        <button type="submit" class="logout-btn"> Вийти з акаунту</button>
     </form>
 </div>
 
